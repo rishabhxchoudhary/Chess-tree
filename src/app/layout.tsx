@@ -1,7 +1,7 @@
 import "@/styles/globals.css";
 
 import type { Metadata } from "next";
-import { Geist } from "next/font/google";
+import { Inter } from "next/font/google";
 
 import { Providers } from "@/components/providers";
 
@@ -11,17 +11,17 @@ export const metadata: Metadata = {
 	icons: [{ rel: "icon", url: "/favicon.ico" }],
 };
 
-const geist = Geist({
+const inter = Inter({
 	subsets: ["latin"],
-	variable: "--font-geist-sans",
+	variable: "--font-sans",
 });
 
 export default function RootLayout({
 	children,
 }: Readonly<{ children: React.ReactNode }>) {
 	return (
-		<html className={`${geist.variable}`} lang="en" suppressHydrationWarning>
-			<body>
+		<html className={`${inter.variable}`} lang="en" suppressHydrationWarning>
+			<body className="font-sans antialiased">
 				<Providers>{children}</Providers>
 			</body>
 		</html>
