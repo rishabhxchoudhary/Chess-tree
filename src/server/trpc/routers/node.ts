@@ -85,9 +85,7 @@ export const nodeRouter = createRouter({
 			const [updated] = await ctx.db
 				.update(nodes)
 				.set(updates)
-				.where(
-					and(eq(nodes.id, id), eq(nodes.repertoireId, repertoireId)),
-				)
+				.where(and(eq(nodes.id, id), eq(nodes.repertoireId, repertoireId)))
 				.returning();
 			return updated;
 		}),

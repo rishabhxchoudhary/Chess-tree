@@ -12,12 +12,12 @@ export function BoardStylePicker() {
 			<div className="grid grid-cols-5 gap-3">
 				{Object.values(BOARD_THEMES).map((theme) => (
 					<button
-						key={theme.key}
 						className={`rounded-lg border-2 p-2 transition-colors ${
 							preferences.boardStyle === theme.key
 								? "border-primary"
 								: "border-transparent hover:border-muted-foreground/30"
 						}`}
+						key={theme.key}
 						onClick={() => update({ boardStyle: theme.key })}
 						type="button"
 					>
@@ -30,9 +30,7 @@ export function BoardStylePicker() {
 									<div
 										key={`${theme.key}-${row}-${col}`}
 										style={{
-											backgroundColor: isLight
-												? theme.light
-												: theme.dark,
+											backgroundColor: isLight ? theme.light : theme.dark,
 										}}
 									/>
 								);

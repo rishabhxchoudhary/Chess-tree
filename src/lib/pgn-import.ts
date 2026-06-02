@@ -10,8 +10,7 @@ export interface ImportedNode {
 	nag: number | null;
 }
 
-const STARTING_FEN =
-	"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+const STARTING_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
 export function parsePgnToNodes(pgn: string): ImportedNode[] {
 	const nodes: ImportedNode[] = [

@@ -48,7 +48,7 @@ export function ImportPgnDialog({
 	};
 
 	return (
-		<Dialog open={open} onOpenChange={setOpen}>
+		<Dialog onOpenChange={setOpen} open={open}>
 			<DialogTrigger>
 				<Button size="sm" variant="outline">
 					Import PGN

@@ -1,7 +1,5 @@
 "use client";
 
-import dagre from "dagre";
-import { useCallback, useEffect, useMemo } from "react";
 import {
 	Background,
 	Controls,
@@ -11,6 +9,8 @@ import {
 	useEdgesState,
 	useNodesState,
 } from "@xyflow/react";
+import dagre from "dagre";
+import { useCallback, useEffect, useMemo } from "react";
 import "@xyflow/react/dist/style.css";
 
 import type { TreeNode } from "@/lib/tree";
@@ -67,11 +67,7 @@ function layoutTree(tree: TreeNode): { nodes: Node[]; edges: Edge[] } {
 	return { nodes: rfNodes, edges: rfEdges };
 }
 
-export function TreeView({
-	tree,
-	currentNodeId,
-	onSelectNode,
-}: TreeViewProps) {
+export function TreeView({ tree, currentNodeId, onSelectNode }: TreeViewProps) {
 	const layout = useMemo(() => {
 		if (!tree) return { nodes: [], edges: [] };
 		return layoutTree(tree);

@@ -23,7 +23,7 @@ export function WinRateBar({ white, draw, black }: WinRateBarProps) {
 	const bPct = (b / total) * 100;
 
 	return (
-		<div className="flex h-5 w-full overflow-hidden rounded text-xs font-medium">
+		<div className="flex h-5 w-full overflow-hidden rounded font-medium text-xs">
 			{wPct > 0 && (
 				<div
 					className="flex items-center justify-center bg-white text-black"

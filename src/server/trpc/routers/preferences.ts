@@ -27,15 +27,11 @@ export const preferencesRouter = createRouter({
 				boardStyle: z
 					.enum(["classic", "wooden", "marble", "tournament", "dark"])
 					.optional(),
-				pieceSet: z
-					.enum(["kaneo", "cburnett", "staunty", "alpha"])
-					.optional(),
+				pieceSet: z.enum(["kaneo", "cburnett", "staunty", "alpha"]).optional(),
 				boardColors: z
 					.object({ light: z.string(), dark: z.string() })
 					.optional(),
-				siteTheme: z
-					.enum(["light", "dark", "wooden", "system"])
-					.optional(),
+				siteTheme: z.enum(["light", "dark", "wooden", "system"]).optional(),
 				soundEnabled: z.boolean().optional(),
 				showLegalMoves: z.boolean().optional(),
 			}),

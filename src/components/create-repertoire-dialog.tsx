@@ -29,7 +29,7 @@ export function CreateRepertoireDialog() {
 	});
 
 	return (
-		<Dialog open={open} onOpenChange={setOpen}>
+		<Dialog onOpenChange={setOpen} open={open}>
 			<DialogTrigger>
 				<Button>New Repertoire</Button>
 			</DialogTrigger>

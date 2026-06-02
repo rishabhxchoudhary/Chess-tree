@@ -1,7 +1,7 @@
 "use client";
 
 import { usePreferences } from "@/hooks/use-preferences";
-import { PIECE_SETS, getPieceImageUrl } from "@/lib/piece-sets";
+import { getPieceImageUrl, PIECE_SETS } from "@/lib/piece-sets";
 
 const PREVIEW_PIECES = ["wK", "wQ", "wR", "wB", "wN", "wP"] as const;
 
@@ -14,21 +14,21 @@ export function PieceSetPicker() {
 			<div className="grid grid-cols-2 gap-3">
 				{Object.values(PIECE_SETS).map((set) => (
 					<button
-						key={set.key}
 						className={`rounded-lg border-2 p-3 transition-colors ${
 							preferences.pieceSet === set.key
 								? "border-primary"
 								: "border-transparent hover:border-muted-foreground/30"
 						}`}
+						key={set.key}
 						onClick={() => update({ pieceSet: set.key })}
 						type="button"
 					>
 						<div className="flex justify-center gap-1">
 							{PREVIEW_PIECES.map((code) => (
 								<img
-									key={code}
 									alt={code}
 									height={36}
+									key={code}
 									src={getPieceImageUrl(set.key, code)}
 									width={36}
 								/>

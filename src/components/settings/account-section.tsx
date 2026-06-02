@@ -23,18 +23,13 @@ export function AccountSection() {
 				</Avatar>
 				<div>
 					<p className="font-medium">{session.user.name}</p>
-					<p className="text-muted-foreground text-sm">
-						{session.user.email}
-					</p>
+					<p className="text-muted-foreground text-sm">{session.user.email}</p>
 				</div>
 				<Badge className="ml-auto" variant="outline">
 					Free Plan
 				</Badge>
 			</div>
-			<Button
-				onClick={() => signOut({ callbackUrl: "/" })}
-				variant="outline"
-			>
+			<Button onClick={() => signOut({ callbackUrl: "/" })} variant="outline">
 				Sign Out
 			</Button>
 		</div>

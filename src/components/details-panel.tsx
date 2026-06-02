@@ -53,7 +53,17 @@ export function DetailsPanel({ repertoireId }: DetailsPanelProps) {
 				}
 			},
 		});
-	}, [currentNode, note, lineName, whiteWin, draw, blackWin, repertoireId, updateNode, store]);
+	}, [
+		currentNode,
+		note,
+		lineName,
+		whiteWin,
+		draw,
+		blackWin,
+		repertoireId,
+		updateNode,
+		store,
+	]);
 
 	if (!currentNode) {
 		return (

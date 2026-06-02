@@ -60,9 +60,9 @@ function AuthenticatedDashboard() {
 				<div className="grid grid-cols-1 gap-4 md:grid-cols-2">
 					{repertoires?.map((r) => (
 						<RepertoireCard
-							key={r.id}
 							color={r.color}
 							id={r.id}
+							key={r.id}
 							name={r.name}
 							nodeCount={r.nodeCount}
 							updatedAt={r.updatedAt}

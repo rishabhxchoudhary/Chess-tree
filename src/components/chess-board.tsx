@@ -7,7 +7,11 @@ import {
 	type PieceRenderObject,
 } from "react-chessboard";
 
-import { PIECE_CODES, type PieceCode, getPieceImageUrl } from "@/lib/piece-sets";
+import {
+	getPieceImageUrl,
+	PIECE_CODES,
+	type PieceCode,
+} from "@/lib/piece-sets";
 
 interface ChessBoardProps {
 	position: string;

@@ -22,9 +22,7 @@ export function ThemeToggle() {
 					<Button
 						key={theme}
 						onClick={() => update({ siteTheme: theme })}
-						variant={
-							preferences.siteTheme === theme ? "default" : "outline"
-						}
+						variant={preferences.siteTheme === theme ? "default" : "outline"}
 					>
 						{THEME_LABELS[theme]}
 					</Button>

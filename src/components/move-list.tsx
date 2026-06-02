@@ -44,8 +44,8 @@ function MainLine({
 		if (mainChild.sideToMove === "black") {
 			moves.push(
 				<span
-					key={`num-${mainChild.id}`}
 					className="mr-1 text-muted-foreground"
+					key={`num-${mainChild.id}`}
 				>
 					{mainChild.moveNumber}.
 				</span>,
@@ -53,8 +53,8 @@ function MainLine({
 		} else if (moves.length === 0 || alternatives.length > 0) {
 			moves.push(
 				<span
-					key={`num-${mainChild.id}`}
 					className="mr-1 text-muted-foreground"
+					key={`num-${mainChild.id}`}
 				>
 					{mainChild.moveNumber}...
 				</span>,
@@ -63,8 +63,8 @@ function MainLine({
 
 		moves.push(
 			<MoveSpan
-				key={mainChild.id}
 				isCurrent={mainChild.id === currentNodeId}
+				key={mainChild.id}
 				move={mainChild.move ?? ""}
 				onClick={() => onSelectNode(mainChild.id)}
 			/>,
@@ -73,8 +73,8 @@ function MainLine({
 		for (const alt of alternatives) {
 			moves.push(
 				<Variation
-					key={`var-${alt.id}`}
 					currentNodeId={currentNodeId}
+					key={`var-${alt.id}`}
 					node={alt}
 					onSelectNode={onSelectNode}
 				/>,
@@ -85,9 +85,7 @@ function MainLine({
 	}
 
 	return (
-		<div className="flex flex-wrap items-start gap-x-1 gap-y-0.5">
-			{moves}
-		</div>
+		<div className="flex flex-wrap items-start gap-x-1 gap-y-0.5">{moves}</div>
 	);
 }
 
@@ -101,7 +99,7 @@ function Variation({
 	onSelectNode: (nodeId: string) => void;
 }) {
 	return (
-		<div className="my-1 w-full rounded border-l-2 border-muted-foreground/30 pl-2 text-muted-foreground">
+		<div className="my-1 w-full rounded border-muted-foreground/30 border-l-2 pl-2 text-muted-foreground">
 			<span className="mr-1 text-xs">
 				{node.sideToMove === "black"
 					? `${node.moveNumber}.`

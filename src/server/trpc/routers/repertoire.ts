@@ -5,8 +5,7 @@ import { authorize } from "@/lib/authorize";
 import { nodes, repertoires } from "@/server/db/schema";
 import { createRouter, protectedProcedure } from "@/server/trpc";
 
-const STARTING_FEN =
-	"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+const STARTING_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
 export const repertoireRouter = createRouter({
 	list: protectedProcedure.query(async ({ ctx }) => {

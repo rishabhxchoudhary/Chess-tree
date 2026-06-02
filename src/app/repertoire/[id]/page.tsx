@@ -9,8 +9,8 @@ import { ChessBoard } from "@/components/chess-board";
 import { DetailsPanel } from "@/components/details-panel";
 import { ImportPgnDialog } from "@/components/import-pgn-dialog";
 import { MoveList } from "@/components/move-list";
-import { TreeView } from "@/components/tree-view";
 import { trpc } from "@/components/providers";
+import { TreeView } from "@/components/tree-view";
 import { Button } from "@/components/ui/button";
 import {
 	ResizableHandle,
@@ -42,7 +42,7 @@ export default function RepertoireEditorPage({
 		if (nodesData) {
 			store.setRepertoireData(id, nodesData);
 		}
-	}, [nodesData, id]);
+	}, [nodesData, id, store.setRepertoireData]);
 
 	useEffect(() => {
 		const handleKeyDown = (e: KeyboardEvent) => {
@@ -56,7 +56,7 @@ export default function RepertoireEditorPage({
 		};
 		window.addEventListener("keydown", handleKeyDown);
 		return () => window.removeEventListener("keydown", handleKeyDown);
-	}, []);
+	}, [store.navigateForward, store.navigateBack]);
 
 	const currentNode = store.getCurrentNode();
 
@@ -78,9 +78,7 @@ export default function RepertoireEditorPage({
 			else if (move.san === "O-O" || move.san === "O-O-O") play("castle");
 			else play("move");
 
-			const existing = currentNode.children.find(
-				(c) => c.move === move.san,
-			);
+			const existing = currentNode.children.find((c) => c.move === move.san);
 			if (existing) {
 				store.selectNode(existing.id);
 				return true;
@@ -138,9 +136,7 @@ export default function RepertoireEditorPage({
 								lastMove={store.lastMove}
 								lightSquareColor={boardColors.light}
 								onPieceDrop={handlePieceDrop}
-								orientation={
-									repertoire?.color === "black" ? "black" : "white"
-								}
+								orientation={repertoire?.color === "black" ? "black" : "white"}
 								pieceSet={preferences.pieceSet}
 								position={currentNode?.fen ?? "start"}
 							/>

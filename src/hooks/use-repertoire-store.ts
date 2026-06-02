@@ -93,9 +93,7 @@ export const useRepertoireStore = create<RepertoireState>((set, get) => ({
 			};
 			collect(nodeId);
 
-			const newFlatNodes = state.flatNodes.filter(
-				(n) => !toRemove.has(n.id),
-			);
+			const newFlatNodes = state.flatNodes.filter((n) => !toRemove.has(n.id));
 			const newTree = buildTree(newFlatNodes);
 			const newCurrentId =
 				state.currentNodeId && toRemove.has(state.currentNodeId)
@@ -132,11 +130,11 @@ export const useRepertoireStore = create<RepertoireState>((set, get) => ({
 	},
 
 	navigateBack: () => {
-		const { currentNodeId, flatNodes } = get();
+		const { currentNodeId, flatNodes, selectNode } = get();
 		if (!currentNodeId) return;
 		const node = flatNodes.find((n) => n.id === currentNodeId);
 		if (node?.parentId) {
-			get().selectNode(node.parentId);
+			selectNode(node.parentId);
 		}
 	},
 }));
