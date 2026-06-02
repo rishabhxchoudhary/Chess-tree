@@ -144,7 +144,8 @@ export default function RepertoireEditorPage({
 
 			if (!move) return false;
 
-			if (chess.isCheck()) play("check");
+			if (chess.isCheckmate()) play("game-end");
+			else if (chess.isCheck()) play("check");
 			else if (move.captured) play("capture");
 			else if (move.san === "O-O" || move.san === "O-O-O") play("castle");
 			else play("move");
