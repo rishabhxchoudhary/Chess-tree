@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { use, useCallback, useEffect } from "react";
 import { useSession } from "next-auth/react";
-import type { PieceDropHandlerArgs } from "react-chessboard";
+import type { Square } from "react-chessboard/dist/chessboard/types";
 
 import { ChessBoard } from "@/components/chess-board";
 import { DetailsPanel } from "@/components/details-panel";
@@ -72,8 +72,8 @@ export default function RepertoireEditorPage({
 	const currentNode = store.getCurrentNode();
 
 	const handlePieceDrop = useCallback(
-		({ sourceSquare, targetSquare }: PieceDropHandlerArgs): boolean => {
-			if (!currentNode || !sourceSquare || !targetSquare) return false;
+		(sourceSquare: Square, targetSquare: Square): boolean => {
+			if (!currentNode) return false;
 
 			const chess = new Chess(currentNode.fen);
 			const move = chess.move({

@@ -1,44 +1,31 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import type { PieceDropHandlerArgs, PieceRenderObject } from "react-chessboard";
-
-import { PIECE_CODES, type PieceCode, getPieceImageUrl } from "@/lib/piece-sets";
+import { useCallback, useMemo } from "react";
+import type { Square, Piece } from "react-chessboard/dist/chessboard/types";
 
 const Chessboard = dynamic(
 	() => import("react-chessboard").then((mod) => mod.Chessboard),
-	{ ssr: false, loading: () => <div className="aspect-square w-full animate-pulse rounded bg-muted" /> },
+	{
+		ssr: false,
+		loading: () => (
+			<div className="aspect-square w-full animate-pulse rounded bg-muted" />
+		),
+	},
 );
 
 interface ChessBoardProps {
 	position: string;
 	orientation?: "white" | "black";
-	onPieceDrop?: (args: PieceDropHandlerArgs) => boolean;
+	onPieceDrop?: (
+		sourceSquare: Square,
+		targetSquare: Square,
+		piece: Piece,
+	) => boolean;
 	lightSquareColor: string;
 	darkSquareColor: string;
 	pieceSet: string;
 	lastMove?: { from: string; to: string } | null;
-}
-
-function buildPieceRenderers(pieceSet: string): PieceRenderObject {
-	const pieces: PieceRenderObject = {};
-	for (const code of PIECE_CODES) {
-		const url = getPieceImageUrl(pieceSet, code as PieceCode);
-		pieces[code] = () => (
-			<div
-				style={{
-					width: "100%",
-					height: "100%",
-					backgroundImage: `url(${url})`,
-					backgroundSize: "contain",
-					backgroundRepeat: "no-repeat",
-					backgroundPosition: "center",
-				}}
-			/>
-		);
-	}
-	return pieces;
 }
 
 export function ChessBoard({
@@ -47,14 +34,8 @@ export function ChessBoard({
 	onPieceDrop,
 	lightSquareColor,
 	darkSquareColor,
-	pieceSet,
 	lastMove,
 }: ChessBoardProps) {
-	const [mounted, setMounted] = useState(false);
-	useEffect(() => setMounted(true), []);
-
-	const customPieces = useMemo(() => buildPieceRenderers(pieceSet), [pieceSet]);
-
 	const customSquareStyles = useMemo(() => {
 		if (!lastMove) return {};
 		return {
@@ -64,32 +45,28 @@ export function ChessBoard({
 	}, [lastMove]);
 
 	const handlePieceDrop = useCallback(
-		(args: PieceDropHandlerArgs) => {
-			if (onPieceDrop) return onPieceDrop(args);
+		(sourceSquare: Square, targetSquare: Square, piece: Piece) => {
+			if (onPieceDrop)
+				return onPieceDrop(sourceSquare, targetSquare, piece);
 			return false;
 		},
 		[onPieceDrop],
 	);
 
-	if (!mounted) return <div className="aspect-square w-full animate-pulse rounded bg-muted" />;
-
 	return (
 		<Chessboard
-			options={{
-				id: "chess-tree-board",
-				position,
-				boardOrientation: orientation,
-				pieces: customPieces,
-				boardStyle: {
-					borderRadius: "4px",
-					boxShadow: "0 2px 10px rgba(0, 0, 0, 0.3)",
-				},
-				darkSquareStyle: { backgroundColor: darkSquareColor },
-				lightSquareStyle: { backgroundColor: lightSquareColor },
-				squareStyles: customSquareStyles,
-				animationDurationInMs: 200,
-				onPieceDrop: handlePieceDrop,
+			id="chess-tree-board"
+			position={position}
+			boardOrientation={orientation}
+			animationDuration={200}
+			customBoardStyle={{
+				borderRadius: "4px",
+				boxShadow: "0 2px 10px rgba(0, 0, 0, 0.3)",
 			}}
+			customDarkSquareStyle={{ backgroundColor: darkSquareColor }}
+			customLightSquareStyle={{ backgroundColor: lightSquareColor }}
+			customSquareStyles={customSquareStyles}
+			onPieceDrop={handlePieceDrop}
 		/>
 	);
 }

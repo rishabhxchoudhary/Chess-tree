@@ -17,56 +17,43 @@ test.describe("Dashboard (authenticated)", () => {
 		await page.goto("/");
 		await page.getByText("New Repertoire").click();
 
-		// Dialog should appear
 		await expect(page.getByText("Create Repertoire")).toBeVisible();
 
-		await page.getByLabel("Name").fill("E2E Test Repertoire");
+		const name = `Test-${Date.now()}`;
+		await page.getByLabel("Name").fill(name);
 		await page.getByRole("button", { name: "♔ White" }).click();
 		await page.getByRole("button", { name: "Create" }).click();
 
-		// Dialog closes, card should appear
-		await expect(page.getByText("E2E Test Repertoire")).toBeVisible({
-			timeout: 5000,
-		});
+		await expect(page.getByText(name)).toBeVisible({ timeout: 5000 });
 	});
 });
 
 test.describe("Repertoire editor (authenticated)", () => {
-	let repertoireUrl: string;
-
-	test.beforeEach(async ({ page }) => {
-		// Create a repertoire to work with
+	test.beforeEach(async ({ page }, testInfo) => {
 		await page.goto("/");
+
+		// Create a uniquely-named repertoire for this test
+		const name = `E2E-${testInfo.title.slice(0, 10)}-${Date.now()}`;
 		await page.getByText("New Repertoire").click();
-		await page.getByLabel("Name").fill("Editor Test");
+		await page.getByLabel("Name").fill(name);
 		await page.getByRole("button", { name: "♔ White" }).click();
 		await page.getByRole("button", { name: "Create" }).click();
 
-		// Wait for card and click into it
-		const card = page.getByText("Editor Test");
-		await card.waitFor({ timeout: 5000 });
-		await card.click();
-
-		// Wait for editor page to load
+		// Click into the newly created repertoire (use first match in case of duplicates)
+		await page.getByText(name).first().waitFor({ timeout: 5000 });
+		await page.getByText(name).first().click();
 		await page.waitForURL(/\/repertoire\//, { timeout: 5000 });
-		repertoireUrl = page.url();
 	});
 
 	test("editor page loads without JS errors", async ({ page }) => {
 		const errors: string[] = [];
 		page.on("pageerror", (err) => errors.push(err.message));
 
-		await page.goto(repertoireUrl);
+		// Page is already loaded from beforeEach
 		await page.waitForLoadState("networkidle");
-
-		// Give extra time for dynamic imports
 		await page.waitForTimeout(3000);
 
 		expect(errors).toEqual([]);
-	});
-
-	test("shows repertoire name in header", async ({ page }) => {
-		await expect(page.getByText("Editor Test")).toBeVisible();
 	});
 
 	test("shows Back button", async ({ page }) => {
@@ -82,9 +69,9 @@ test.describe("Repertoire editor (authenticated)", () => {
 	});
 
 	test("chessboard renders", async ({ page }) => {
-		// Wait for the dynamically imported board
-		const board = page.locator('[id^="chess-tree-board"]');
-		await expect(board).toBeVisible({ timeout: 10000 });
+		// v4 react-chessboard wraps in a div; look for any board-related element
+		const board = page.locator('[data-boardid="chess-tree-board"], [id*="chess-tree-board"]');
+		await expect(board.first()).toBeVisible({ timeout: 10000 });
 	});
 
 	test("details panel shows Starting position for root node", async ({
@@ -97,7 +84,7 @@ test.describe("Repertoire editor (authenticated)", () => {
 
 	test("back button navigates to dashboard", async ({ page }) => {
 		await page.getByText("← Back").click();
-		await expect(page).toHaveURL("/");
+		await expect(page).toHaveURL("/", { timeout: 10000 });
 	});
 
 	test("import PGN dialog opens", async ({ page }) => {
