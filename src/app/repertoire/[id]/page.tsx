@@ -6,6 +6,7 @@ import { use, useCallback, useEffect } from "react";
 import type { PieceDropHandlerArgs } from "react-chessboard";
 
 import { ChessBoard } from "@/components/chess-board";
+import { ImportPgnDialog } from "@/components/import-pgn-dialog";
 import { trpc } from "@/components/providers";
 import { Button } from "@/components/ui/button";
 import {
@@ -115,11 +116,14 @@ export default function RepertoireEditorPage({
 				<h1 className="font-semibold text-lg">
 					{repertoire?.name ?? "Loading..."}
 				</h1>
-				<Link href="/settings">
-					<Button size="sm" variant="ghost">
-						Settings
-					</Button>
-				</Link>
+				<div className="flex items-center gap-2">
+					<ImportPgnDialog repertoireId={id} />
+					<Link href="/settings">
+						<Button size="sm" variant="ghost">
+							Settings
+						</Button>
+					</Link>
+				</div>
 			</header>
 
 			<ResizablePanelGroup className="flex-1" orientation="horizontal">
