@@ -2,7 +2,7 @@
 
 import { useCallback, useRef } from "react";
 
-type SoundType = "move" | "capture" | "check" | "castle" | "game-end";
+type SoundType = "move" | "capture" | "castle" | "game-end";
 
 export function useChessSounds(enabled: boolean) {
 	const audioCache = useRef<Map<SoundType, HTMLAudioElement>>(new Map());
