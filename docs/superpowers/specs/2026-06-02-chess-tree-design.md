@@ -17,6 +17,8 @@ A multi-user web application for building, managing, and studying chess opening 
 - Multiple named repertoires per user
 - PGN file import to bootstrap repertoires
 - Multi-user with Google OAuth
+- User plan system (free plan by default, extensible to paid tiers)
+- Settings page: board style, piece set, color theme, website theme
 
 ### Out of Scope (v1) — but designed for future integration
 
@@ -48,9 +50,43 @@ A multi-user web application for building, managing, and studying chess opening 
 
 ## Data Model
 
-### Users Table (managed by NextAuth)
+### Users Table (extended from NextAuth)
 
-Standard NextAuth users/accounts/sessions tables.
+Standard NextAuth users/accounts/sessions tables, plus:
+
+| Column | Type | Purpose |
+|---|---|---|
+| plan | ENUM(free, pro) DEFAULT 'free' | User's subscription plan. Free by default. Feature gating checks this column. |
+
+### User Preferences Table
+
+Stores per-user visual customization. One row per user, created on first login with defaults.
+
+| Column | Type | Purpose |
+|---|---|---|
+| id | UUID (PK) | Primary key |
+| userId | FK -> users (unique) | One preferences row per user |
+| boardStyle | VARCHAR(50) DEFAULT 'classic' | Board texture: `classic`, `wooden`, `marble`, `tournament`, `dark` |
+| pieceSet | VARCHAR(50) DEFAULT 'kaneo' | Piece set: `kaneo`, `cburnett`, `staunty`, `alpha` |
+| boardColors | JSONB DEFAULT '{"light":"#EEEED2","dark":"#769656"}' | Custom light/dark square hex colors (overrides boardStyle defaults when user picks custom) |
+| siteTheme | VARCHAR(50) DEFAULT 'system' | Website theme: `light`, `dark`, `wooden`, `system` |
+| soundEnabled | BOOLEAN DEFAULT true | Toggle sound effects |
+| showLegalMoves | BOOLEAN DEFAULT true | Show legal move dots on the board |
+| createdAt | TIMESTAMP | |
+| updatedAt | TIMESTAMP | |
+
+**Board styles** define a texture/background for the squares:
+- `classic` — flat colors (default green/cream)
+- `wooden` — wood-grain texture on squares, warm brown tones throughout the site
+- `marble` — marble texture, cool grey tones
+- `tournament` — dark green/buff, traditional OTB feel
+- `dark` — dark grey/charcoal squares
+
+**Site themes** control the overall app appearance (sidebar, backgrounds, text):
+- `light` — clean white/grey
+- `dark` — dark mode
+- `wooden` — warm wood-grain backgrounds, parchment-colored panels, feels like a physical chess study
+- `system` — follows OS preference for light/dark
 
 ### Repertoires Table
 
@@ -125,6 +161,25 @@ All three panels stay in sync:
 - Click a node in tree view -> board + move list update
 - Click a move in move list -> board + tree view update
 
+### Settings Page (`/settings`)
+
+**Appearance section:**
+- Board style picker — visual preview cards showing each style (classic, wooden, marble, tournament, dark) with a mini chessboard preview
+- Piece set picker — shows all 12 pieces for each set side-by-side
+- Custom board colors — color pickers for light/dark squares (overrides board style)
+- Site theme toggle — light / dark / wooden / system
+
+**Preferences section:**
+- Sound effects on/off
+- Show legal move indicators on/off
+
+**Account section:**
+- Current plan badge (Free / Pro)
+- Google account info (email, avatar)
+- Sign out
+
+All changes apply instantly (optimistic UI) and save via debounced tRPC mutation.
+
 ### Interaction Model
 
 **Adding moves:**
@@ -173,29 +228,47 @@ All three panels stay in sync:
 - `node.delete` — delete a node and all descendants
 - `node.reorder` — update sortOrder for siblings
 
+### Preferences Router
+- `preferences.get` — get current user's preferences (creates defaults if none exist)
+- `preferences.update` — update any preference fields (partial update)
+
 ### Import Router
 - `import.pgn` — parse PGN text and merge into repertoire tree
 
 ## Board Theming
 
-**Board colors:** Custom green/cream palette (not exact Chess.com hex values)
-- Light squares: ~#EEEED2
-- Dark squares: ~#769656
+All visual settings are driven by the user's preferences row. A `usePreferences()` hook provides the values to all components via React context.
 
-**Pieces:** Kaneo SVG set loaded via react-chessboard's `customPieces` prop
+**Default board colors (classic style):**
+- Light squares: #EEEED2
+- Dark squares: #769656
+
+**Board styles with default colors:**
+
+| Style | Light Square | Dark Square | Texture |
+|---|---|---|---|
+| classic | #EEEED2 | #769656 | Flat color |
+| wooden | #E8C99B | #A67B5B | Wood-grain CSS texture (repeating-linear-gradient or background image) |
+| marble | #E8E8E8 | #8B8B8B | Subtle marble veining |
+| tournament | #E8DFC0 | #4E7837 | Flat, traditional OTB |
+| dark | #3A3A3A | #1A1A1A | Flat, minimal |
+
+**Pieces:** Loaded via react-chessboard's `customPieces` prop. The active piece set is read from user preferences. Piece SVGs are bundled in `public/pieces/{setName}/`.
 
 **Highlights:**
 - Last move: semi-transparent yellow-green overlay
 - Selected piece: similar highlight
-- Legal move dots (optional, can be toggled)
+- Legal move dots: toggled via user preferences
 
 **Drag behavior:**
 - Scale 1.2 on drag
 - Ghost piece at origin (0.5 opacity)
 - Animation duration ~200ms
 
-**Sounds:** Lichess sfx pack
+**Sounds:** Lichess sfx pack, toggled via user preferences
 - move.mp3, capture.mp3, check.mp3, castle.mp3, game-end.mp3
+
+**Site theme implementation:** CSS variables on `<html>` element, switched via a `ThemeProvider`. The `wooden` theme uses warm browns (#8B6914 accents), parchment backgrounds (#F5E6C8), and subtle wood-grain textures on panels — making the whole app feel like a physical chess study.
 
 ## Architectural Principles (for extensibility)
 
