@@ -3,7 +3,7 @@
 import { Chess } from "chess.js";
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { use, useCallback, useEffect, useState } from "react";
+import { use, useCallback, useEffect, useRef, useState } from "react";
 import { signIn, useSession } from "next-auth/react";
 import type { Square } from "react-chessboard/dist/chessboard/types";
 import { toast } from "sonner";
@@ -62,10 +62,14 @@ export default function RepertoireEditorPage({
 	const [draw, setDraw] = useState("");
 	const [blackWin, setBlackWin] = useState("");
 	const [played, setPlayed] = useState("");
+	const [dirty, setDirty] = useState(false);
 
+	// FIX 1: Only load data from server on initial mount, not on every re-render
+	const initialLoadDone = useRef(false);
 	useEffect(() => {
-		if (nodesData) {
+		if (nodesData && !initialLoadDone.current) {
 			store.setRepertoireData(id, nodesData);
+			initialLoadDone.current = true;
 		}
 	}, [nodesData, id, store.setRepertoireData]);
 
@@ -76,7 +80,7 @@ export default function RepertoireEditorPage({
 		setOptimisticFen(null);
 	}, [currentNode?.id]);
 
-	// Sync form state when node changes
+	// FIX 4: Sync form state from the STORE (which has latest data), not just on id change
 	useEffect(() => {
 		if (currentNode) {
 			setNote(currentNode.note ?? "");
@@ -85,22 +89,51 @@ export default function RepertoireEditorPage({
 			setDraw(currentNode.drawPct ?? "");
 			setBlackWin(currentNode.blackWinPct ?? "");
 			setPlayed(currentNode.playedPct ?? "");
+			setDirty(false);
 		}
 	}, [currentNode?.id]);
 
+	// Track dirty state on any field change
+	const updateField = useCallback(
+		(setter: (v: string) => void) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+			setter(e.target.value);
+			setDirty(true);
+		},
+		[],
+	);
+
+	// FIX 2 & 3: Explicit save that updates both DB and store
 	const saveDetails = useCallback(() => {
 		if (!currentNode) return;
-		updateNode.mutate({
-			id: currentNode.id,
-			repertoireId: id,
+		const updates = {
 			note: note || null,
 			lineName: lineName || null,
 			whiteWinPct: whiteWin || null,
 			drawPct: draw || null,
 			blackWinPct: blackWin || null,
 			playedPct: played || null,
-		});
-	}, [currentNode, note, lineName, whiteWin, draw, blackWin, played, id, updateNode]);
+		};
+		updateNode.mutate(
+			{
+				id: currentNode.id,
+				repertoireId: id,
+				...updates,
+			},
+			{
+				onSuccess: (updated) => {
+					// FIX 3: Update the store so tree view reflects changes immediately
+					if (updated) {
+						store.updateNode(currentNode.id, updated);
+					}
+					setDirty(false);
+					toast.success("Saved", { duration: 1500 });
+				},
+				onError: () => {
+					toast.error("Failed to save", { duration: 2000 });
+				},
+			},
+		);
+	}, [currentNode, note, lineName, whiteWin, draw, blackWin, played, id, updateNode, store]);
 
 	useEffect(() => {
 		const handleKeyDown = (e: KeyboardEvent) => {
@@ -118,14 +151,14 @@ export default function RepertoireEditorPage({
 				const node = store.getCurrentNode();
 				if (node && node.children.length > 0) {
 					const nextMove = node.children[0]!;
-					// Determine sound based on the move we're navigating to
 					if (nextMove.move) {
 						const chess = new Chess(node.fen);
 						try {
 							const m = chess.move(nextMove.move);
 							if (m && chess.isCheckmate()) play("game-end");
 							else if (m?.captured) play("capture");
-							else if (m?.san === "O-O" || m?.san === "O-O-O") play("castle");
+							else if (m?.san === "O-O" || m?.san === "O-O-O")
+								play("castle");
 							else play("move");
 						} catch {
 							play("move");
@@ -137,7 +170,7 @@ export default function RepertoireEditorPage({
 		};
 		window.addEventListener("keydown", handleKeyDown);
 		return () => window.removeEventListener("keydown", handleKeyDown);
-	}, [store.navigateForward, store.navigateBack]);
+	}, [store.navigateForward, store.navigateBack, play, store]);
 
 	const handleMove = useCallback(
 		(sourceSquare: Square, targetSquare: Square): boolean => {
@@ -152,7 +185,8 @@ export default function RepertoireEditorPage({
 					promotion: "q",
 				});
 			} catch {
-				const turn = currentNode.sideToMove === "white" ? "White" : "Black";
+				const turn =
+					currentNode.sideToMove === "white" ? "White" : "Black";
 				toast.error(`${turn} to move`, {
 					description: "That move is not legal in this position.",
 					duration: 2000,
@@ -167,7 +201,6 @@ export default function RepertoireEditorPage({
 			else if (move.san === "O-O" || move.san === "O-O-O") play("castle");
 			else play("move");
 
-			// Show new position immediately (don't wait for server)
 			setOptimisticFen(chess.fen());
 
 			const existing = currentNode.children.find(
@@ -211,9 +244,6 @@ export default function RepertoireEditorPage({
 			: "white";
 
 	const isAtRoot = currentNode?.parentId === null;
-	const hasStats =
-		Number(whiteWin || 0) + Number(draw || 0) + Number(blackWin || 0) > 0 ||
-		Number(played || 0) > 0;
 
 	if (status === "loading") {
 		return (
@@ -270,7 +300,9 @@ export default function RepertoireEditorPage({
 								onMove={handleMove}
 								orientation={boardOrientation}
 								pieceSet={preferences.pieceSet}
-								position={optimisticFen ?? currentNode?.fen ?? "start"}
+								position={
+									optimisticFen ?? currentNode?.fen ?? "start"
+								}
 							/>
 						</div>
 					</div>
@@ -282,7 +314,8 @@ export default function RepertoireEditorPage({
 							variant="ghost"
 							onClick={() => {
 								const path = store.getPath();
-								if (path.length > 0) store.selectNode(path[0]!.id);
+								if (path.length > 0)
+									store.selectNode(path[0]!.id);
 							}}
 							title="Go to start"
 						>
@@ -329,15 +362,14 @@ export default function RepertoireEditorPage({
 						</Button>
 					</div>
 
-					{/* Stats bar + Notes (only when a move is selected) */}
+					{/* Details area */}
 					<div className="space-y-2 border-t px-4 py-3">
 						{/* Stats bar */}
 						<div className="flex items-center gap-3 text-sm">
 							<Input
 								className="h-7 max-w-[200px] text-xs"
 								disabled={isAtRoot}
-								onBlur={saveDetails}
-								onChange={(e) => setLineName(e.target.value)}
+								onChange={updateField(setLineName)}
 								placeholder="Opening name..."
 								value={lineName}
 							/>
@@ -345,8 +377,7 @@ export default function RepertoireEditorPage({
 								<Input
 									className="h-7 w-16 text-center text-xs"
 									disabled={isAtRoot}
-									onBlur={saveDetails}
-									onChange={(e) => setPlayed(e.target.value)}
+									onChange={updateField(setPlayed)}
 									placeholder="%"
 									type="number"
 									value={played}
@@ -364,7 +395,9 @@ export default function RepertoireEditorPage({
 												: null
 										}
 										draw={
-											draw ? Number.parseFloat(draw) : null
+											draw
+												? Number.parseFloat(draw)
+												: null
 										}
 										white={
 											whiteWin
@@ -377,10 +410,7 @@ export default function RepertoireEditorPage({
 									<Input
 										className="h-7 w-14 text-center text-xs"
 										disabled={isAtRoot}
-										onBlur={saveDetails}
-										onChange={(e) =>
-											setWhiteWin(e.target.value)
-										}
+										onChange={updateField(setWhiteWin)}
 										placeholder="W"
 										type="number"
 										value={whiteWin}
@@ -388,8 +418,7 @@ export default function RepertoireEditorPage({
 									<Input
 										className="h-7 w-14 text-center text-xs"
 										disabled={isAtRoot}
-										onBlur={saveDetails}
-										onChange={(e) => setDraw(e.target.value)}
+										onChange={updateField(setDraw)}
 										placeholder="D"
 										type="number"
 										value={draw}
@@ -397,10 +426,7 @@ export default function RepertoireEditorPage({
 									<Input
 										className="h-7 w-14 text-center text-xs"
 										disabled={isAtRoot}
-										onBlur={saveDetails}
-										onChange={(e) =>
-											setBlackWin(e.target.value)
-										}
+										onChange={updateField(setBlackWin)}
 										placeholder="B"
 										type="number"
 										value={blackWin}
@@ -409,16 +435,20 @@ export default function RepertoireEditorPage({
 							</div>
 						</div>
 
-						{/* Notes — always visible */}
+						{/* Notes */}
 						<Textarea
 							className="min-h-[60px] resize-y text-sm"
-							onBlur={saveDetails}
-							onChange={(e) => setNote(e.target.value)}
-							placeholder={isAtRoot ? "Add notes about this repertoire..." : "Add notes about this position..."}
+							onChange={updateField(setNote)}
+							placeholder={
+								isAtRoot
+									? "Add notes about this repertoire..."
+									: "Add notes about this position..."
+							}
 							value={note}
 						/>
 
-						<div className="flex justify-end">
+						{/* Actions row */}
+						<div className="flex items-center justify-between">
 							<Button
 								size="sm"
 								variant="ghost"
@@ -447,6 +477,13 @@ export default function RepertoireEditorPage({
 								}}
 							>
 								Delete move
+							</Button>
+							<Button
+								size="sm"
+								disabled={!dirty}
+								onClick={saveDetails}
+							>
+								{updateNode.isPending ? "Saving..." : dirty ? "Save" : "Saved"}
 							</Button>
 						</div>
 					</div>
