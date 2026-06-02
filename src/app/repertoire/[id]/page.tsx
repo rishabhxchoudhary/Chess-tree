@@ -53,6 +53,7 @@ export default function RepertoireEditorPage({
 
 	const [flipped, setFlipped] = useState(false);
 	const [rightTab, setRightTab] = useState<RightTab>("moves");
+	const [optimisticFen, setOptimisticFen] = useState<string | null>(null);
 
 	// Inline editing state
 	const [note, setNote] = useState("");
@@ -69,6 +70,11 @@ export default function RepertoireEditorPage({
 	}, [nodesData, id, store.setRepertoireData]);
 
 	const currentNode = store.getCurrentNode();
+
+	// Clear optimistic FEN when store updates
+	useEffect(() => {
+		setOptimisticFen(null);
+	}, [currentNode?.id]);
 
 	// Sync form state when node changes
 	useEffect(() => {
@@ -142,6 +148,9 @@ export default function RepertoireEditorPage({
 			else if (move.captured) play("capture");
 			else if (move.san === "O-O" || move.san === "O-O-O") play("castle");
 			else play("move");
+
+			// Show new position immediately (don't wait for server)
+			setOptimisticFen(chess.fen());
 
 			const existing = currentNode.children.find(
 				(c) => c.move === move.san,
@@ -243,7 +252,7 @@ export default function RepertoireEditorPage({
 								onMove={handleMove}
 								orientation={boardOrientation}
 								pieceSet={preferences.pieceSet}
-								position={currentNode?.fen ?? "start"}
+								position={optimisticFen ?? currentNode?.fen ?? "start"}
 							/>
 						</div>
 					</div>
