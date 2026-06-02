@@ -415,39 +415,37 @@ export default function RepertoireEditorPage({
 							value={note}
 						/>
 
-						{/* Delete — only for actual moves */}
-						{!isAtRoot && (
-							<div className="flex justify-end">
-								<Button
-									size="sm"
-									variant="ghost"
-									className="text-destructive text-xs hover:text-destructive"
-									onClick={() => {
-										if (
-											!currentNode ||
-											!confirm(
-												"Delete this move and all continuations?",
-											)
+						<div className="flex justify-end">
+							<Button
+								size="sm"
+								variant="ghost"
+								className="text-destructive text-xs hover:text-destructive"
+								disabled={isAtRoot}
+								onClick={() => {
+									if (
+										!currentNode ||
+										!confirm(
+											"Delete this move and all continuations?",
 										)
-											return;
-										deleteNode.mutate(
-											{
-												id: currentNode.id,
-												repertoireId: id,
-											},
-											{
-												onSuccess: () =>
-													store.removeNode(
-														currentNode.id,
-													),
-											},
-										);
-									}}
-								>
-									Delete move
-								</Button>
-							</div>
-						)}
+									)
+										return;
+									deleteNode.mutate(
+										{
+											id: currentNode.id,
+											repertoireId: id,
+										},
+										{
+											onSuccess: () =>
+												store.removeNode(
+													currentNode.id,
+												),
+										},
+									);
+								}}
+							>
+								Delete move
+							</Button>
+						</div>
 					</div>
 				</div>
 
