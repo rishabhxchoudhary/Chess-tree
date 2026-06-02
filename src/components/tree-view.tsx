@@ -9,10 +9,10 @@ import {
 	useEdgesState,
 	useNodesState,
 } from "@xyflow/react";
-import dagre from "dagre";
 import { useCallback, useEffect, useMemo } from "react";
 import "@xyflow/react/dist/style.css";
 
+import { layoutTree } from "@/lib/tree-layout";
 import type { TreeNode } from "@/lib/tree";
 
 interface TreeViewProps {
@@ -21,81 +21,45 @@ interface TreeViewProps {
 	onSelectNode: (nodeId: string) => void;
 }
 
-const NODE_WIDTH = 100;
-const NODE_HEIGHT = 40;
-
-function layoutTree(tree: TreeNode): { nodes: Node[]; edges: Edge[] } {
-	const g = new dagre.graphlib.Graph();
-	g.setDefaultEdgeLabel(() => ({}));
-	g.setGraph({
-		rankdir: "TB",
-		nodesep: 40,
-		ranksep: 60,
-		marginx: 20,
-		marginy: 20,
-	});
-
-	const rfNodes: Node[] = [];
-	const rfEdges: Edge[] = [];
-
-	function traverse(node: TreeNode, depth: number) {
-		const label = node.move
-			? `${node.moveNumber}${node.sideToMove === "black" ? "." : "..."} ${node.move}`
-			: "Start";
-
-		g.setNode(node.id, { width: NODE_WIDTH, height: NODE_HEIGHT });
-		rfNodes.push({
-			id: node.id,
-			data: { label, lineName: node.lineName, depth },
-			position: { x: 0, y: 0 },
-		});
-
-		for (const child of node.children) {
-			rfEdges.push({
-				id: `${node.id}-${child.id}`,
-				source: node.id,
-				target: child.id,
-				type: "smoothstep",
-				style: { stroke: "#769656", strokeWidth: 2 },
-			});
-			traverse(child, depth + 1);
-		}
-	}
-
-	traverse(tree, 0);
-	dagre.layout(g);
-
-	for (const rfNode of rfNodes) {
-		const pos = g.node(rfNode.id);
-		if (pos) {
-			rfNode.position = {
-				x: pos.x - NODE_WIDTH / 2,
-				y: pos.y - NODE_HEIGHT / 2,
-			};
-		}
-	}
-
-	return { nodes: rfNodes, edges: rfEdges };
-}
-
 export function TreeView({
 	tree,
 	currentNodeId,
 	onSelectNode,
 }: TreeViewProps) {
 	const layout = useMemo(() => {
-		if (!tree) return { nodes: [], edges: [] };
+		if (!tree) return null;
 		return layoutTree(tree);
 	}, [tree]);
 
-	const [rfNodes, setNodes, onNodesChange] = useNodesState(layout.nodes);
-	const [rfEdges, setEdges, onEdgesChange] = useEdgesState(layout.edges);
+	const rfNodes = useMemo<Node[]>(() => {
+		if (!layout) return [];
+		return layout.nodes.map((n) => ({
+			id: n.id,
+			data: { label: n.label },
+			position: { x: n.x, y: n.y },
+		}));
+	}, [layout]);
+
+	const rfEdges = useMemo<Edge[]>(() => {
+		if (!layout) return [];
+		return layout.edges.map((e) => ({
+			id: e.id,
+			source: e.source,
+			target: e.target,
+			type: "smoothstep",
+			style: { stroke: "#769656", strokeWidth: 2 },
+		}));
+	}, [layout]);
+
+	const [nodes, setNodes, onNodesChange] = useNodesState(rfNodes);
+	const [edges, setEdges, onEdgesChange] = useEdgesState(rfEdges);
 
 	useEffect(() => {
-		setNodes(layout.nodes);
-		setEdges(layout.edges);
-	}, [layout, setNodes, setEdges]);
+		setNodes(rfNodes);
+		setEdges(rfEdges);
+	}, [rfNodes, rfEdges, setNodes, setEdges]);
 
+	// Apply styling (separate from layout so it updates on selection without re-layout)
 	useEffect(() => {
 		setNodes((nds) =>
 			nds.map((n) => ({
@@ -113,7 +77,7 @@ export function TreeView({
 					fontWeight: n.id === currentNodeId ? "700" : "500",
 					fontFamily: "monospace",
 					textAlign: "center" as const,
-					width: `${NODE_WIDTH}px`,
+					width: "100px",
 					cursor: "pointer",
 				},
 			})),
@@ -138,16 +102,17 @@ export function TreeView({
 	return (
 		<div className="h-full w-full">
 			<ReactFlow
-				edges={rfEdges}
+				edges={edges}
 				fitView
-				fitViewOptions={{ padding: 0.3 }}
-				nodes={rfNodes}
+				fitViewOptions={{ padding: 0.4, maxZoom: 1.5 }}
+				nodes={nodes}
 				onEdgesChange={onEdgesChange}
 				onNodeClick={handleNodeClick}
 				onNodesChange={onNodesChange}
 				proOptions={{ hideAttribution: true }}
-				minZoom={0.3}
+				minZoom={0.1}
 				maxZoom={2}
+				nodesDraggable={false}
 			>
 				<Background color="#334155" gap={20} />
 				<Controls
