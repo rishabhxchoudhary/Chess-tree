@@ -1,6 +1,6 @@
 "use client";
 
-import { useSession } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 
 import Link from "next/link";
 
@@ -27,9 +27,7 @@ export default function Dashboard() {
 				<p className="text-muted-foreground">
 					Build and study your opening repertoire
 				</p>
-				<a href="/api/auth/signin">
-					<Button>Sign in with Google</Button>
-				</a>
+				<Button onClick={() => signIn()}>Sign in with Google</Button>
 			</main>
 		);
 	}

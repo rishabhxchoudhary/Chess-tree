@@ -4,7 +4,7 @@ import { Chess } from "chess.js";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { use, useCallback, useEffect, useState } from "react";
-import { useSession } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import type { Square } from "react-chessboard/dist/chessboard/types";
 
 import { ChessBoard } from "@/components/chess-board";
@@ -149,9 +149,7 @@ export default function RepertoireEditorPage({
 				<p className="text-muted-foreground">
 					Sign in to access your repertoire
 				</p>
-				<a href="/api/auth/signin">
-					<Button>Sign in with Google</Button>
-				</a>
+				<Button onClick={() => signIn()}>Sign in with Google</Button>
 			</div>
 		);
 	}
