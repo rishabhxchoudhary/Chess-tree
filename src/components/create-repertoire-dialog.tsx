@@ -30,8 +30,8 @@ export function CreateRepertoireDialog() {
 
 	return (
 		<Dialog onOpenChange={setOpen} open={open}>
-			<DialogTrigger>
-				<Button>New Repertoire</Button>
+			<DialogTrigger className="group/button inline-flex shrink-0 items-center justify-center rounded-lg bg-primary px-3 py-2 font-medium text-primary-foreground text-sm hover:bg-primary/80">
+				New Repertoire
 			</DialogTrigger>
 			<DialogContent>
 				<DialogHeader>

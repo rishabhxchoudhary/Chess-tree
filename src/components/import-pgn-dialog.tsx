@@ -49,10 +49,8 @@ export function ImportPgnDialog({
 
 	return (
 		<Dialog onOpenChange={setOpen} open={open}>
-			<DialogTrigger>
-				<Button size="sm" variant="outline">
-					Import PGN
-				</Button>
+			<DialogTrigger className="group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-border bg-background px-3 py-1.5 font-medium text-sm hover:bg-muted">
+				Import PGN
 			</DialogTrigger>
 			<DialogContent className="max-w-lg">
 				<DialogHeader>
