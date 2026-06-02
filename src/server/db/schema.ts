@@ -109,6 +109,7 @@ export const nodes = pgTable("nodes", {
 	whiteWinPct: decimal("white_win_pct", { precision: 5, scale: 2 }),
 	drawPct: decimal("draw_pct", { precision: 5, scale: 2 }),
 	blackWinPct: decimal("black_win_pct", { precision: 5, scale: 2 }),
+	playedPct: decimal("played_pct", { precision: 5, scale: 2 }),
 	nag: integer("nag"),
 	metadata: jsonb("metadata"),
 	sortOrder: integer("sort_order").default(0).notNull(),

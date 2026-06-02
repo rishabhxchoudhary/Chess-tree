@@ -5,6 +5,7 @@ import {
 	Controls,
 	type Edge,
 	type Node,
+	type NodeTypes,
 	ReactFlow,
 	useEdgesState,
 	useNodesState,
@@ -12,6 +13,7 @@ import {
 import { useCallback, useEffect, useMemo } from "react";
 import "@xyflow/react/dist/style.css";
 
+import { TreeMoveNode } from "@/components/tree-node";
 import { layoutTree } from "@/lib/tree-layout";
 import type { TreeNode } from "@/lib/tree";
 
@@ -20,6 +22,10 @@ interface TreeViewProps {
 	currentNodeId: string | null;
 	onSelectNode: (nodeId: string) => void;
 }
+
+const nodeTypes: NodeTypes = {
+	moveNode: TreeMoveNode,
+};
 
 export function TreeView({
 	tree,
@@ -35,7 +41,15 @@ export function TreeView({
 		if (!layout) return [];
 		return layout.nodes.map((n) => ({
 			id: n.id,
-			data: { label: n.label },
+			type: "moveNode",
+			data: {
+				label: n.label,
+				whiteWinPct: n.whiteWinPct,
+				drawPct: n.drawPct,
+				blackWinPct: n.blackWinPct,
+				playedPct: n.playedPct,
+				isRoot: n.isRoot,
+			},
 			position: { x: n.x, y: n.y },
 		}));
 	}, [layout]);
@@ -59,7 +73,6 @@ export function TreeView({
 		setEdges(rfEdges);
 	}, [rfNodes, rfEdges, setNodes, setEdges]);
 
-	// Apply styling (separate from layout so it updates on selection without re-layout)
 	useEffect(() => {
 		setNodes((nds) =>
 			nds.map((n) => ({
@@ -72,12 +85,8 @@ export function TreeView({
 							? "2px solid #86efac"
 							: "1px solid #475569",
 					borderRadius: "8px",
-					padding: "6px 12px",
-					fontSize: "13px",
-					fontWeight: n.id === currentNodeId ? "700" : "500",
-					fontFamily: "monospace",
-					textAlign: "center" as const,
-					width: "100px",
+					padding: "6px 10px",
+					width: "130px",
 					cursor: "pointer",
 				},
 			})),
@@ -106,6 +115,7 @@ export function TreeView({
 				fitView
 				fitViewOptions={{ padding: 0.4, maxZoom: 1.5 }}
 				nodes={nodes}
+				nodeTypes={nodeTypes}
 				onEdgesChange={onEdgesChange}
 				onNodeClick={handleNodeClick}
 				onNodesChange={onNodesChange}

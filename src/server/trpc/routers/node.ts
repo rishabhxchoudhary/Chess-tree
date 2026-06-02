@@ -77,6 +77,7 @@ export const nodeRouter = createRouter({
 				whiteWinPct: z.string().nullable().optional(),
 				drawPct: z.string().nullable().optional(),
 				blackWinPct: z.string().nullable().optional(),
+				playedPct: z.string().nullable().optional(),
 			}),
 		)
 		.mutation(async ({ ctx, input }) => {

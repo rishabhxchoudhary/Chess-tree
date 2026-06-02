@@ -23,6 +23,7 @@ function makeNode(overrides: Partial<NodeRow> & { id: string }): NodeRow {
 		whiteWinPct: overrides.whiteWinPct ?? null,
 		drawPct: overrides.drawPct ?? null,
 		blackWinPct: overrides.blackWinPct ?? null,
+		playedPct: overrides.playedPct ?? null,
 		nag: overrides.nag ?? null,
 		metadata: overrides.metadata ?? null,
 		sortOrder: overrides.sortOrder ?? 0,

@@ -26,6 +26,7 @@ export function DetailsPanel({ repertoireId }: DetailsPanelProps) {
 	const [whiteWin, setWhiteWin] = useState("");
 	const [draw, setDraw] = useState("");
 	const [blackWin, setBlackWin] = useState("");
+	const [played, setPlayed] = useState("");
 
 	useEffect(() => {
 		if (currentNode) {
@@ -34,6 +35,7 @@ export function DetailsPanel({ repertoireId }: DetailsPanelProps) {
 			setWhiteWin(currentNode.whiteWinPct ?? "");
 			setDraw(currentNode.drawPct ?? "");
 			setBlackWin(currentNode.blackWinPct ?? "");
+			setPlayed(currentNode.playedPct ?? "");
 		}
 	}, [currentNode?.id]);
 
@@ -47,6 +49,7 @@ export function DetailsPanel({ repertoireId }: DetailsPanelProps) {
 			whiteWinPct: whiteWin || null,
 			drawPct: draw || null,
 			blackWinPct: blackWin || null,
+			playedPct: played || null,
 		});
 	}, [
 		currentNode,
@@ -55,6 +58,7 @@ export function DetailsPanel({ repertoireId }: DetailsPanelProps) {
 		whiteWin,
 		draw,
 		blackWin,
+		played,
 		repertoireId,
 		updateNode,
 	]);
@@ -91,6 +95,19 @@ export function DetailsPanel({ repertoireId }: DetailsPanelProps) {
 					onChange={(e) => setLineName(e.target.value)}
 					placeholder="e.g. Sicilian: Najdorf"
 					value={lineName}
+				/>
+			</div>
+
+			<div>
+				<Label className="text-xs" htmlFor="played">% Times Played</Label>
+				<Input
+					className="mt-1 h-8 text-sm"
+					id="played"
+					onBlur={save}
+					onChange={(e) => setPlayed(e.target.value)}
+					placeholder="e.g. 45"
+					type="number"
+					value={played}
 				/>
 			</div>
 

@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 import { AccountSection } from "@/components/settings/account-section";
 import { BoardStylePicker } from "@/components/settings/board-style-picker";
@@ -11,12 +11,14 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 
 export default function SettingsPage() {
+	const router = useRouter();
+
 	return (
 		<main className="mx-auto max-w-2xl px-4 py-8">
 			<div className="mb-8 flex items-center gap-4">
-				<Link href="/">
-					<Button variant="ghost">&larr; Back</Button>
-				</Link>
+				<Button variant="ghost" onClick={() => router.back()}>
+					&larr; Back
+				</Button>
 				<h1 className="font-bold text-3xl">Settings</h1>
 			</div>
 

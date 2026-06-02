@@ -2,6 +2,8 @@
 
 import { useSession } from "next-auth/react";
 
+import Link from "next/link";
+
 import { CreateRepertoireDialog } from "@/components/create-repertoire-dialog";
 import { trpc } from "@/components/providers";
 import { RepertoireCard } from "@/components/repertoire-card";
@@ -42,7 +44,12 @@ function AuthenticatedDashboard() {
 		<main className="mx-auto max-w-4xl px-4 py-8">
 			<div className="mb-8 flex items-center justify-between">
 				<h1 className="font-bold text-3xl">My Repertoires</h1>
-				<CreateRepertoireDialog />
+				<div className="flex items-center gap-2">
+					<CreateRepertoireDialog />
+					<Link href="/settings">
+						<Button variant="ghost" size="sm">Settings</Button>
+					</Link>
+				</div>
 			</div>
 
 			{isLoading ? (

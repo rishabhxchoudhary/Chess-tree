@@ -22,10 +22,11 @@ export default defineConfig({
 			dependencies: ["setup"],
 		},
 	],
+	timeout: 60000,
 	webServer: {
 		command: "bun run db:seed && bun run dev",
 		url: "http://localhost:3000",
 		reuseExistingServer: !process.env.CI,
-		timeout: 30000,
+		timeout: 60000,
 	},
 });

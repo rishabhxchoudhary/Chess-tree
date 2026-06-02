@@ -5,7 +5,11 @@ interface LayoutNode {
 	label: string;
 	x: number;
 	y: number;
-	data: TreeNode;
+	whiteWinPct: string | null;
+	drawPct: string | null;
+	blackWinPct: string | null;
+	playedPct: string | null;
+	isRoot: boolean;
 }
 
 interface LayoutEdge {
@@ -21,10 +25,10 @@ interface LayoutResult {
 	height: number;
 }
 
-const NODE_WIDTH = 100;
-const NODE_HEIGHT = 40;
+const NODE_WIDTH = 130;
+const NODE_HEIGHT = 70;
 const H_SPACING = 20;
-const V_SPACING = 70;
+const V_SPACING = 50;
 
 /**
  * Custom tree layout algorithm based on Reingold-Tilford principles.
@@ -71,7 +75,11 @@ export function layoutTree(tree: TreeNode): LayoutResult {
 			label,
 			x: centerX - NODE_WIDTH / 2,
 			y,
-			data: node,
+			whiteWinPct: node.whiteWinPct,
+			drawPct: node.drawPct,
+			blackWinPct: node.blackWinPct,
+			playedPct: node.playedPct ?? null,
+			isRoot: node.parentId === null,
 		});
 
 		for (const child of node.children) {

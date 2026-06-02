@@ -8,8 +8,8 @@ setup("authenticate as test user", async ({ page }) => {
 	await page.waitForLoadState("networkidle");
 
 	// Fill in credentials form (the "Test Account" provider)
-	await page.getByLabel("Email").fill(TEST_EMAIL);
-	await page.getByLabel("Password").fill(TEST_PASSWORD);
+	await page.locator("#input-email-for-credentials-provider").fill(TEST_EMAIL);
+	await page.locator("#input-password-for-credentials-provider").fill(TEST_PASSWORD);
 	await page.getByRole("button", { name: "Sign in with Test Account" }).click();
 
 	// Wait for redirect to home
