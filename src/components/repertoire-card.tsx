@@ -49,11 +49,13 @@ export function RepertoireCard({
 		<>
 			<Card className="group relative transition-colors hover:bg-accent">
 				<Link href={`/repertoire/${id}`}>
-					<CardHeader className="flex flex-row items-center justify-between pb-2">
-						<CardTitle className="text-lg">{name}</CardTitle>
-						<Badge variant={color === "white" ? "outline" : "default"}>
-							{color === "white" ? "♔ White" : "♚ Black"}
-						</Badge>
+					<CardHeader className="pb-2">
+						<div className="flex items-center justify-between">
+							<CardTitle className="text-lg">{name}</CardTitle>
+							<Badge variant={color === "white" ? "outline" : "default"}>
+								{color === "white" ? "♔ White" : "♚ Black"}
+							</Badge>
+						</div>
 					</CardHeader>
 					<CardContent>
 						<div className="flex justify-between text-muted-foreground text-sm">
@@ -62,7 +64,7 @@ export function RepertoireCard({
 						</div>
 					</CardContent>
 				</Link>
-				<div className="absolute top-2 right-2 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+				<div className="flex gap-1 border-t px-3 py-1.5 opacity-0 transition-opacity group-hover:opacity-100">
 					<Button
 						size="sm"
 						variant="ghost"
