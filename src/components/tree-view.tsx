@@ -48,6 +48,7 @@ export function TreeView({
 				drawPct: n.drawPct,
 				blackWinPct: n.blackWinPct,
 				playedPct: n.playedPct,
+				lineName: n.lineName,
 				isRoot: n.isRoot,
 			},
 			position: { x: n.x, y: n.y },

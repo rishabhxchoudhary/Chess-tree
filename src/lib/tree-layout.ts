@@ -9,6 +9,7 @@ interface LayoutNode {
 	drawPct: string | null;
 	blackWinPct: string | null;
 	playedPct: string | null;
+	lineName: string | null;
 	isRoot: boolean;
 }
 
@@ -79,6 +80,7 @@ export function layoutTree(tree: TreeNode): LayoutResult {
 			drawPct: node.drawPct,
 			blackWinPct: node.blackWinPct,
 			playedPct: node.playedPct ?? null,
+			lineName: node.lineName,
 			isRoot: node.parentId === null,
 		});
 

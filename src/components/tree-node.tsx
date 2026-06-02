@@ -9,6 +9,7 @@ interface TreeNodeData {
 	drawPct: string | null;
 	blackWinPct: string | null;
 	playedPct: string | null;
+	lineName: string | null;
 	isRoot: boolean;
 }
 
@@ -66,6 +67,11 @@ export const TreeMoveNode = memo(function TreeMoveNode({
 				<div className="font-mono font-bold text-[12px] leading-tight">
 					{data.label}
 				</div>
+				{data.lineName && (
+					<div className="truncate text-[9px] italic opacity-60">
+						{data.lineName}
+					</div>
+				)}
 				{hasStats && (
 					<div className="mt-1 space-y-0.5">
 						{played > 0 && (
