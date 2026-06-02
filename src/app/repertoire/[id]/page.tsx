@@ -3,7 +3,7 @@
 import { Chess } from "chess.js";
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { use, useCallback, useEffect } from "react";
+import { use, useCallback, useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import type { Square } from "react-chessboard/dist/chessboard/types";
 
@@ -48,6 +48,7 @@ export default function RepertoireEditorPage({
 		{ enabled: !!session },
 	);
 	const createNode = trpc.node.create.useMutation();
+	const [flipped, setFlipped] = useState(false);
 
 	useEffect(() => {
 		if (nodesData) {
@@ -76,7 +77,7 @@ export default function RepertoireEditorPage({
 
 	const currentNode = store.getCurrentNode();
 
-	const handlePieceDrop = useCallback(
+	const handleMove = useCallback(
 		(sourceSquare: Square, targetSquare: Square): boolean => {
 			if (!currentNode) return false;
 
@@ -126,6 +127,14 @@ export default function RepertoireEditorPage({
 		[currentNode, id, createNode, play, store],
 	);
 
+	const boardOrientation = flipped
+		? repertoire?.color === "black"
+			? "white"
+			: "black"
+		: repertoire?.color === "black"
+			? "black"
+			: "white";
+
 	if (status === "loading") {
 		return (
 			<div className="flex h-screen items-center justify-center">
@@ -169,19 +178,43 @@ export default function RepertoireEditorPage({
 			<ResizablePanelGroup className="flex-1" orientation="horizontal">
 				{/* Board */}
 				<ResizablePanel defaultSize={30} minSize={25}>
-					<div className="flex h-full items-center justify-center p-4">
+					<div className="flex h-full flex-col items-center justify-center p-4">
 						<div className="w-full max-w-[560px]">
 							<ChessBoard
 								darkSquareColor={boardColors.dark}
 								lastMove={store.lastMove}
 								lightSquareColor={boardColors.light}
-								onPieceDrop={handlePieceDrop}
-								orientation={
-									repertoire?.color === "black" ? "black" : "white"
-								}
+								onMove={handleMove}
+								orientation={boardOrientation}
 								pieceSet={preferences.pieceSet}
 								position={currentNode?.fen ?? "start"}
 							/>
+						</div>
+						<div className="mt-2 flex gap-2">
+							<Button
+								size="sm"
+								variant="ghost"
+								onClick={() => setFlipped((f) => !f)}
+								title="Flip board"
+							>
+								&#x21C5; Flip
+							</Button>
+							<Button
+								size="sm"
+								variant="ghost"
+								onClick={() => store.navigateBack()}
+								title="Previous move"
+							>
+								&#x25C0;
+							</Button>
+							<Button
+								size="sm"
+								variant="ghost"
+								onClick={() => store.navigateForward()}
+								title="Next move"
+							>
+								&#x25B6;
+							</Button>
 						</div>
 					</div>
 				</ResizablePanel>

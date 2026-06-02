@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { trpc } from "@/components/providers";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
@@ -18,6 +19,7 @@ export function DetailsPanel({ repertoireId }: DetailsPanelProps) {
 	const store = useRepertoireStore();
 	const currentNode = store.getCurrentNode();
 	const updateNode = trpc.node.update.useMutation();
+	const deleteNode = trpc.node.delete.useMutation();
 
 	const [note, setNote] = useState("");
 	const [lineName, setLineName] = useState("");
@@ -142,6 +144,28 @@ export function DetailsPanel({ repertoireId }: DetailsPanelProps) {
 					value={note}
 				/>
 			</div>
+
+			<Separator />
+
+			<Button
+				className="w-full"
+				variant="destructive"
+				size="sm"
+				onClick={() => {
+					if (!confirm("Delete this move and all its continuations?"))
+						return;
+					deleteNode.mutate(
+						{ id: currentNode.id, repertoireId },
+						{
+							onSuccess: () => {
+								store.removeNode(currentNode.id);
+							},
+						},
+					);
+				}}
+			>
+				Delete move
+			</Button>
 		</div>
 	);
 }
