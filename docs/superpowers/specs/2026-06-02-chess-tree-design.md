@@ -18,14 +18,16 @@ A multi-user web application for building, managing, and studying chess opening 
 - PGN file import to bootstrap repertoires
 - Multi-user with Google OAuth
 
-### Out of Scope (v1)
+### Out of Scope (v1) — but designed for future integration
 
-- Engine analysis
-- Training/quiz mode
-- Evaluation symbols (!, ?, !!, ??)
-- Board arrows/highlights drawn by user
-- Sharing repertoires between users
-- Auto-fetched win rates from external APIs
+| Future Feature | How the architecture accommodates it |
+|---|---|
+| Engine analysis | Nodes table has a JSONB `metadata` column from day 1. Engine eval (cp, mate, depth, best line) goes there with zero schema migration. Board component accepts an optional eval bar prop. |
+| Training/quiz mode | Tree traversal logic is generic and reusable. Quiz mode = walk the tree, present positions, check user's move against children. Add `lastDrilled` / `drillScore` to metadata later. |
+| Evaluation symbols (!, ?, !!, ??) | Nodes table includes a nullable `nag` (Numeric Annotation Glyph) INT column from day 1 — this is the PGN standard encoding. Rendering is just a display concern. |
+| Board arrows/highlights | Stored in the `metadata` JSONB column as `{arrows: [{from, to, color}], highlights: [{square, color}]}`. react-chessboard already supports `customArrows` and `customSquareStyles` props — just pipe data through. |
+| Sharing repertoires | Repertoire access goes through an `authorize()` helper from day 1 (checks `userId === session.userId`). Sharing = add a `shares` table + extend `authorize()` to check it. No API restructuring needed. |
+| Auto-fetched win rates | Win rate columns already exist on nodes. Add a `source` field to metadata (`manual` vs `lichess` vs `masters`) and an API integration layer. Existing UI just reads the same columns. |
 
 ## Tech Stack
 
@@ -77,6 +79,8 @@ Standard NextAuth users/accounts/sessions tables.
 | whiteWinPct | DECIMAL(5,2) (nullable) | White win % at this position |
 | drawPct | DECIMAL(5,2) (nullable) | Draw % |
 | blackWinPct | DECIMAL(5,2) (nullable) | Black win % |
+| nag | INT (nullable) | Numeric Annotation Glyph (PGN standard: 1=!, 2=?, 3=!!, 4=??, 5=!?, 6=?!). Not rendered in v1 but stored on PGN import and preserved on export. |
+| metadata | JSONB (nullable) | Extensibility column for future features (engine eval, arrows, highlights, drill stats). Not used in v1 but present from day 1 to avoid schema migrations. |
 | sortOrder | INT | Ordering among siblings (main line first) |
 | createdAt | TIMESTAMP | |
 
@@ -192,6 +196,20 @@ All three panels stay in sync:
 
 **Sounds:** Lichess sfx pack
 - move.mp3, capture.mp3, check.mp3, castle.mp3, game-end.mp3
+
+## Architectural Principles (for extensibility)
+
+1. **Props-driven board component.** The chessboard wrapper accepts all display data (position, arrows, highlights, orientation) as props. It has no internal state about what to show. This means any future feature (engine arrows, training highlights) just passes new props — no board component changes.
+
+2. **Authorization as a composable helper.** All tRPC procedures call `authorize(repertoireId, session)` which currently checks `userId === session.userId`. Sharing = extend this one function to also check a `shares` table. No procedure changes needed.
+
+3. **JSONB metadata column for unstructured future data.** Rather than adding columns for every future feature, the `metadata` JSONB column on nodes absorbs engine eval, arrows, drill stats, etc. Typed via Zod schemas that evolve independently of the DB schema.
+
+4. **Tree logic in a shared utility.** Tree traversal (find path to root, find subtree, find siblings) lives in a `lib/tree.ts` utility, not scattered across components. Quiz mode, export, and analysis all reuse the same traversal functions.
+
+5. **PGN import preserves all data.** Even data we don't render in v1 (NAG symbols, comments, variations) is stored faithfully. No information loss on import → re-export round-trip.
+
+6. **Board component is swappable.** The board is wrapped in our own `<ChessBoard>` component that abstracts over react-chessboard's API. If we ever switch to Chessground or another renderer, only this wrapper changes.
 
 ## Reference Implementations
 
