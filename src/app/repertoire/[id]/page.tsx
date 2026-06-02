@@ -6,6 +6,7 @@ import { use, useCallback, useEffect } from "react";
 import type { PieceDropHandlerArgs } from "react-chessboard";
 
 import { ChessBoard } from "@/components/chess-board";
+import { DetailsPanel } from "@/components/details-panel";
 import { ImportPgnDialog } from "@/components/import-pgn-dialog";
 import { MoveList } from "@/components/move-list";
 import { TreeView } from "@/components/tree-view";
@@ -170,9 +171,7 @@ export default function RepertoireEditorPage({
 						</ResizablePanel>
 						<ResizableHandle withHandle />
 						<ResizablePanel defaultSize={50}>
-							<div className="flex h-full items-center justify-center text-muted-foreground">
-								Details Panel (coming next)
-							</div>
+							<DetailsPanel repertoireId={id} />
 						</ResizablePanel>
 					</ResizablePanelGroup>
 				</ResizablePanel>
