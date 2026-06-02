@@ -85,7 +85,9 @@ export const nodeRouter = createRouter({
 			const [updated] = await ctx.db
 				.update(nodes)
 				.set(updates)
-				.where(eq(nodes.id, id))
+				.where(
+					and(eq(nodes.id, id), eq(nodes.repertoireId, repertoireId)),
+				)
 				.returning();
 			return updated;
 		}),
@@ -115,8 +117,19 @@ export const nodeRouter = createRouter({
 			};
 			collectDescendants(input.id);
 
+			if (!allNodes.some((n) => n.id === input.id)) {
+				return { deleted: 0 };
+			}
+
 			for (const nodeId of toDelete) {
-				await ctx.db.delete(nodes).where(eq(nodes.id, nodeId));
+				await ctx.db
+					.delete(nodes)
+					.where(
+						and(
+							eq(nodes.id, nodeId),
+							eq(nodes.repertoireId, input.repertoireId),
+						),
+					);
 			}
 
 			return { deleted: toDelete.size };
@@ -135,7 +148,12 @@ export const nodeRouter = createRouter({
 				await ctx.db
 					.update(nodes)
 					.set({ sortOrder: i })
-					.where(eq(nodes.id, input.nodeIds[i]!));
+					.where(
+						and(
+							eq(nodes.id, input.nodeIds[i]!),
+							eq(nodes.repertoireId, input.repertoireId),
+						),
+					);
 			}
 			return { success: true };
 		}),

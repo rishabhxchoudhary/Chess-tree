@@ -1,37 +1,75 @@
-import Link from "next/link";
+"use client";
 
-export default function HomePage() {
+import { useSession } from "next-auth/react";
+
+import { CreateRepertoireDialog } from "@/components/create-repertoire-dialog";
+import { trpc } from "@/components/providers";
+import { RepertoireCard } from "@/components/repertoire-card";
+import { Button } from "@/components/ui/button";
+
+export default function Dashboard() {
+	const { data: session, status } = useSession();
+
+	if (status === "loading") {
+		return (
+			<main className="flex min-h-screen items-center justify-center">
+				<p className="text-muted-foreground">Loading...</p>
+			</main>
+		);
+	}
+
+	if (!session) {
+		return (
+			<main className="flex min-h-screen flex-col items-center justify-center gap-6">
+				<h1 className="font-bold text-4xl">Chess Tree</h1>
+				<p className="text-muted-foreground">
+					Build and study your opening repertoire
+				</p>
+				<a href="/api/auth/signin">
+					<Button>Sign in with Google</Button>
+				</a>
+			</main>
+		);
+	}
+
+	return <AuthenticatedDashboard />;
+}
+
+function AuthenticatedDashboard() {
+	const { data: repertoires, isLoading } = trpc.repertoire.list.useQuery();
+
 	return (
-		<main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c] text-white">
-			<div className="container flex flex-col items-center justify-center gap-12 px-4 py-16">
-				<h1 className="font-extrabold text-5xl text-white tracking-tight sm:text-[5rem]">
-					Create <span className="text-[hsl(280,100%,70%)]">T3</span> App
-				</h1>
-				<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-8">
-					<Link
-						className="flex max-w-xs flex-col gap-4 rounded-xl bg-white/10 p-4 text-white hover:bg-white/20"
-						href="https://create.t3.gg/en/usage/first-steps"
-						target="_blank"
-					>
-						<h3 className="font-bold text-2xl">First Steps →</h3>
-						<div className="text-lg">
-							Just the basics - Everything you need to know to set up your
-							database and authentication.
-						</div>
-					</Link>
-					<Link
-						className="flex max-w-xs flex-col gap-4 rounded-xl bg-white/10 p-4 text-white hover:bg-white/20"
-						href="https://create.t3.gg/en/introduction"
-						target="_blank"
-					>
-						<h3 className="font-bold text-2xl">Documentation →</h3>
-						<div className="text-lg">
-							Learn more about Create T3 App, the libraries it uses, and how to
-							deploy it.
-						</div>
-					</Link>
-				</div>
+		<main className="mx-auto max-w-4xl px-4 py-8">
+			<div className="mb-8 flex items-center justify-between">
+				<h1 className="font-bold text-3xl">My Repertoires</h1>
+				<CreateRepertoireDialog />
 			</div>
+
+			{isLoading ? (
+				<p className="text-muted-foreground">Loading repertoires...</p>
+			) : repertoires?.length === 0 ? (
+				<div className="py-20 text-center">
+					<p className="mb-4 text-muted-foreground text-xl">
+						No repertoires yet
+					</p>
+					<p className="text-muted-foreground">
+						Create your first repertoire to start building your opening tree.
+					</p>
+				</div>
+			) : (
+				<div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+					{repertoires?.map((r) => (
+						<RepertoireCard
+							key={r.id}
+							color={r.color}
+							id={r.id}
+							name={r.name}
+							nodeCount={r.nodeCount}
+							updatedAt={r.updatedAt}
+						/>
+					))}
+				</div>
+			)}
 		</main>
 	);
 }
