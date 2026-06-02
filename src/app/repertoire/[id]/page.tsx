@@ -2,10 +2,10 @@
 
 import { Chess } from "chess.js";
 import Link from "next/link";
-import { use, useCallback, useEffect } from "react";
-import type { PieceDropHandlerArgs } from "react-chessboard";
-
 import dynamic from "next/dynamic";
+import { use, useCallback, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import type { PieceDropHandlerArgs } from "react-chessboard";
 
 import { ChessBoard } from "@/components/chess-board";
 import { DetailsPanel } from "@/components/details-panel";
@@ -33,8 +33,28 @@ export default function RepertoireEditorPage({
 	params: Promise<{ id: string }>;
 }) {
 	const { id } = use(params);
+	const { data: session, status } = useSession();
 	const { preferences } = usePreferences();
 	const boardColors = useBoardColors(preferences);
+
+	if (status === "loading") {
+		return (
+			<div className="flex h-screen items-center justify-center">
+				<p className="text-muted-foreground">Loading...</p>
+			</div>
+		);
+	}
+
+	if (!session) {
+		return (
+			<div className="flex h-screen flex-col items-center justify-center gap-4">
+				<p className="text-muted-foreground">Sign in to access your repertoire</p>
+				<a href="/api/auth/signin">
+					<Button>Sign in with Google</Button>
+				</a>
+			</div>
+		);
+	}
 	const { play } = useChessSounds(preferences.soundEnabled);
 
 	const store = useRepertoireStore();
