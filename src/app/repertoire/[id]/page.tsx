@@ -112,8 +112,26 @@ export default function RepertoireEditorPage({
 			if (e.key === "ArrowLeft") {
 				e.preventDefault();
 				store.navigateBack();
+				play("move");
 			} else if (e.key === "ArrowRight") {
 				e.preventDefault();
+				const node = store.getCurrentNode();
+				if (node && node.children.length > 0) {
+					const nextMove = node.children[0]!;
+					// Determine sound based on the move we're navigating to
+					if (nextMove.move) {
+						const chess = new Chess(node.fen);
+						try {
+							const m = chess.move(nextMove.move);
+							if (m && chess.isCheckmate()) play("game-end");
+							else if (m?.captured) play("capture");
+							else if (m?.san === "O-O" || m?.san === "O-O-O") play("castle");
+							else play("move");
+						} catch {
+							play("move");
+						}
+					}
+				}
 				store.navigateForward();
 			}
 		};
