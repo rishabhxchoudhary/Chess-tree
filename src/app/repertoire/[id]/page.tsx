@@ -1,8 +1,8 @@
 "use client";
 
 import { Chess } from "chess.js";
-import Link from "next/link";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { use, useCallback, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import type { PieceDropHandlerArgs } from "react-chessboard";
@@ -12,11 +12,6 @@ import { DetailsPanel } from "@/components/details-panel";
 import { ImportPgnDialog } from "@/components/import-pgn-dialog";
 import { MoveList } from "@/components/move-list";
 import { trpc } from "@/components/providers";
-
-const TreeView = dynamic(
-	() => import("@/components/tree-view").then((mod) => mod.TreeView),
-	{ ssr: false },
-);
 import { Button } from "@/components/ui/button";
 import {
 	ResizableHandle,
@@ -27,6 +22,11 @@ import { useChessSounds } from "@/hooks/use-chess-sounds";
 import { useBoardColors, usePreferences } from "@/hooks/use-preferences";
 import { useRepertoireStore } from "@/hooks/use-repertoire-store";
 
+const TreeView = dynamic(
+	() => import("@/components/tree-view").then((mod) => mod.TreeView),
+	{ ssr: false },
+);
+
 export default function RepertoireEditorPage({
 	params,
 }: {
@@ -36,32 +36,17 @@ export default function RepertoireEditorPage({
 	const { data: session, status } = useSession();
 	const { preferences } = usePreferences();
 	const boardColors = useBoardColors(preferences);
-
-	if (status === "loading") {
-		return (
-			<div className="flex h-screen items-center justify-center">
-				<p className="text-muted-foreground">Loading...</p>
-			</div>
-		);
-	}
-
-	if (!session) {
-		return (
-			<div className="flex h-screen flex-col items-center justify-center gap-4">
-				<p className="text-muted-foreground">Sign in to access your repertoire</p>
-				<a href="/api/auth/signin">
-					<Button>Sign in with Google</Button>
-				</a>
-			</div>
-		);
-	}
 	const { play } = useChessSounds(preferences.soundEnabled);
 
 	const store = useRepertoireStore();
-	const { data: repertoire } = trpc.repertoire.get.useQuery({ id });
-	const { data: nodesData } = trpc.node.getTree.useQuery({
-		repertoireId: id,
-	});
+	const { data: repertoire } = trpc.repertoire.get.useQuery(
+		{ id },
+		{ enabled: !!session },
+	);
+	const { data: nodesData } = trpc.node.getTree.useQuery(
+		{ repertoireId: id },
+		{ enabled: !!session },
+	);
 	const createNode = trpc.node.create.useMutation();
 
 	useEffect(() => {
@@ -104,7 +89,9 @@ export default function RepertoireEditorPage({
 			else if (move.san === "O-O" || move.san === "O-O-O") play("castle");
 			else play("move");
 
-			const existing = currentNode.children.find((c) => c.move === move.san);
+			const existing = currentNode.children.find(
+				(c) => c.move === move.san,
+			);
 			if (existing) {
 				store.selectNode(existing.id);
 				return true;
@@ -134,6 +121,27 @@ export default function RepertoireEditorPage({
 		[currentNode, id, createNode, play, store],
 	);
 
+	if (status === "loading") {
+		return (
+			<div className="flex h-screen items-center justify-center">
+				<p className="text-muted-foreground">Loading...</p>
+			</div>
+		);
+	}
+
+	if (!session) {
+		return (
+			<div className="flex h-screen flex-col items-center justify-center gap-4">
+				<p className="text-muted-foreground">
+					Sign in to access your repertoire
+				</p>
+				<a href="/api/auth/signin">
+					<Button>Sign in with Google</Button>
+				</a>
+			</div>
+		);
+	}
+
 	return (
 		<div className="flex h-screen flex-col">
 			<header className="flex items-center justify-between border-b px-4 py-2">
@@ -162,7 +170,9 @@ export default function RepertoireEditorPage({
 								lastMove={store.lastMove}
 								lightSquareColor={boardColors.light}
 								onPieceDrop={handlePieceDrop}
-								orientation={repertoire?.color === "black" ? "black" : "white"}
+								orientation={
+									repertoire?.color === "black" ? "black" : "white"
+								}
 								pieceSet={preferences.pieceSet}
 								position={currentNode?.fen ?? "start"}
 							/>
