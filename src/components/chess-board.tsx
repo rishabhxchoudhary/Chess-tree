@@ -1,17 +1,15 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useCallback, useMemo } from "react";
-import {
-	Chessboard,
-	type PieceDropHandlerArgs,
-	type PieceRenderObject,
-} from "react-chessboard";
+import type { PieceDropHandlerArgs, PieceRenderObject } from "react-chessboard";
 
-import {
-	getPieceImageUrl,
-	PIECE_CODES,
-	type PieceCode,
-} from "@/lib/piece-sets";
+import { PIECE_CODES, type PieceCode, getPieceImageUrl } from "@/lib/piece-sets";
+
+const Chessboard = dynamic(
+	() => import("react-chessboard").then((mod) => mod.Chessboard),
+	{ ssr: false },
+);
 
 interface ChessBoardProps {
 	position: string;

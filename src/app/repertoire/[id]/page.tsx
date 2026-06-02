@@ -5,12 +5,18 @@ import Link from "next/link";
 import { use, useCallback, useEffect } from "react";
 import type { PieceDropHandlerArgs } from "react-chessboard";
 
+import dynamic from "next/dynamic";
+
 import { ChessBoard } from "@/components/chess-board";
 import { DetailsPanel } from "@/components/details-panel";
 import { ImportPgnDialog } from "@/components/import-pgn-dialog";
 import { MoveList } from "@/components/move-list";
 import { trpc } from "@/components/providers";
-import { TreeView } from "@/components/tree-view";
+
+const TreeView = dynamic(
+	() => import("@/components/tree-view").then((mod) => mod.TreeView),
+	{ ssr: false },
+);
 import { Button } from "@/components/ui/button";
 import {
 	ResizableHandle,
