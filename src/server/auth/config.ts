@@ -1,5 +1,7 @@
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
+import { eq } from "drizzle-orm";
 import type { DefaultSession, NextAuthConfig } from "next-auth";
+import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 
 import { db } from "@/server/db";
@@ -25,13 +27,45 @@ export const authConfig = {
 		sessionsTable: sessions,
 		verificationTokensTable: verificationTokens,
 	}),
-	providers: [GoogleProvider],
+	session: { strategy: "jwt" },
+	providers: [
+		GoogleProvider,
+		CredentialsProvider({
+			name: "Test Account",
+			credentials: {
+				email: { label: "Email", type: "email" },
+				password: { label: "Password", type: "password" },
+			},
+			async authorize(credentials) {
+				if (!credentials?.email || !credentials?.password) return null;
+
+				const email = credentials.email as string;
+				const password = credentials.password as string;
+
+				if (password !== process.env.TEST_USER_PASSWORD) return null;
+
+				const user = await db.query.users.findFirst({
+					where: eq(users.email, email),
+				});
+
+				if (!user) return null;
+
+				return { id: user.id, email: user.email, name: user.name };
+			},
+		}),
+	],
 	callbacks: {
-		session: ({ session, user }) => ({
+		jwt: ({ token, user }) => {
+			if (user) {
+				token.id = user.id;
+			}
+			return token;
+		},
+		session: ({ session, token }) => ({
 			...session,
 			user: {
 				...session.user,
-				id: user.id,
+				id: token.id as string,
 			},
 		}),
 	},

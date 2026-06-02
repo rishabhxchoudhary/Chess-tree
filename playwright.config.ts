@@ -13,12 +13,17 @@ export default defineConfig({
 	},
 	projects: [
 		{
+			name: "setup",
+			testMatch: /auth\.setup\.ts/,
+		},
+		{
 			name: "chromium",
 			use: { ...devices["Desktop Chrome"] },
+			dependencies: ["setup"],
 		},
 	],
 	webServer: {
-		command: "bun run dev",
+		command: "bun run db:seed && bun run dev",
 		url: "http://localhost:3000",
 		reuseExistingServer: !process.env.CI,
 		timeout: 30000,
