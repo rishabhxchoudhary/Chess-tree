@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 
 import { Providers } from "@/components/providers";
+import { Toaster } from "@/components/ui/sonner";
 
 export const metadata: Metadata = {
 	title: "Chess Tree",
@@ -23,6 +24,7 @@ export default function RootLayout({
 		<html className={`${inter.variable}`} lang="en" suppressHydrationWarning>
 			<body className="font-sans antialiased">
 				<Providers>{children}</Providers>
+				<Toaster position="bottom-center" />
 			</body>
 		</html>
 	);

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { use, useCallback, useEffect, useState } from "react";
 import { signIn, useSession } from "next-auth/react";
 import type { Square } from "react-chessboard/dist/chessboard/types";
+import { toast } from "sonner";
 
 import { ChessBoard } from "@/components/chess-board";
 import { ImportPgnDialog } from "@/components/import-pgn-dialog";
@@ -119,11 +120,21 @@ export default function RepertoireEditorPage({
 			if (!currentNode) return false;
 
 			const chess = new Chess(currentNode.fen);
-			const move = chess.move({
-				from: sourceSquare,
-				to: targetSquare,
-				promotion: "q",
-			});
+			let move;
+			try {
+				move = chess.move({
+					from: sourceSquare,
+					to: targetSquare,
+					promotion: "q",
+				});
+			} catch {
+				const turn = currentNode.sideToMove === "white" ? "White" : "Black";
+				toast.error(`${turn} to move`, {
+					description: "That move is not legal in this position.",
+					duration: 2000,
+				});
+				return false;
+			}
 
 			if (!move) return false;
 
