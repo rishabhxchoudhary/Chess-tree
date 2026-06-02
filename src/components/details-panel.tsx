@@ -36,8 +36,8 @@ export function DetailsPanel({ repertoireId }: DetailsPanelProps) {
 	}, [currentNode?.id]);
 
 	const save = useCallback(() => {
-		if (!currentNode) return;
-		const updates = {
+		if (!currentNode || !currentNode.move) return;
+		updateNode.mutate({
 			id: currentNode.id,
 			repertoireId,
 			note: note || null,
@@ -45,13 +45,6 @@ export function DetailsPanel({ repertoireId }: DetailsPanelProps) {
 			whiteWinPct: whiteWin || null,
 			drawPct: draw || null,
 			blackWinPct: blackWin || null,
-		};
-		updateNode.mutate(updates, {
-			onSuccess: (updated) => {
-				if (updated) {
-					store.updateNode(currentNode.id, updated);
-				}
-			},
 		});
 	}, [
 		currentNode,
@@ -62,27 +55,29 @@ export function DetailsPanel({ repertoireId }: DetailsPanelProps) {
 		blackWin,
 		repertoireId,
 		updateNode,
-		store,
 	]);
 
-	if (!currentNode) {
+	if (!currentNode || !currentNode.move) {
 		return (
-			<div className="flex h-full items-center justify-center text-muted-foreground">
-				Select a move to see details
-			</div>
-		);
-	}
-
-	if (!currentNode.move) {
-		return (
-			<div className="flex h-full items-center justify-center text-muted-foreground">
-				Starting position
+			<div className="flex h-full flex-col items-center justify-center gap-2 p-4 text-center">
+				<p className="font-medium text-muted-foreground">Starting position</p>
+				<p className="text-muted-foreground/60 text-xs">
+					Make a move on the board to start building your repertoire
+				</p>
 			</div>
 		);
 	}
 
 	return (
-		<div className="space-y-4 p-3">
+		<div className="space-y-3 overflow-y-auto p-3">
+			<div className="flex items-center gap-2">
+				<span className="rounded bg-primary/10 px-2 py-0.5 font-mono font-bold text-primary text-sm">
+					{currentNode.moveNumber}
+					{currentNode.sideToMove === "black" ? "." : "..."}{" "}
+					{currentNode.move}
+				</span>
+			</div>
+
 			<div>
 				<Label className="text-xs" htmlFor="lineName">
 					Opening Name
@@ -139,12 +134,11 @@ export function DetailsPanel({ repertoireId }: DetailsPanelProps) {
 					Notes
 				</Label>
 				<Textarea
-					className="mt-1 text-sm"
+					className="mt-1 min-h-[120px] text-sm"
 					id="note"
 					onBlur={save}
 					onChange={(e) => setNote(e.target.value)}
-					placeholder="Ideas, plans, traps..."
-					rows={6}
+					placeholder="Ideas, plans, traps to watch for..."
 					value={note}
 				/>
 			</div>

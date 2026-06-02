@@ -14,7 +14,7 @@ export function MoveList({ tree, currentNodeId, onSelectNode }: MoveListProps) {
 
 	return (
 		<ScrollArea className="h-full p-3">
-			<div className="font-mono text-sm">
+			<div className="font-mono text-sm leading-relaxed">
 				<MainLine
 					currentNodeId={currentNodeId}
 					node={tree}
@@ -36,12 +36,14 @@ function MainLine({
 }) {
 	const moves: React.ReactNode[] = [];
 	let current = node;
+	let needsMoveNumber = true;
 
 	while (current.children.length > 0) {
 		const mainChild = current.children[0]!;
 		const alternatives = current.children.slice(1);
+		const isWhiteMove = mainChild.sideToMove === "black";
 
-		if (mainChild.sideToMove === "black") {
+		if (isWhiteMove) {
 			moves.push(
 				<span
 					className="mr-1 text-muted-foreground"
@@ -50,7 +52,8 @@ function MainLine({
 					{mainChild.moveNumber}.
 				</span>,
 			);
-		} else if (moves.length === 0 || alternatives.length > 0) {
+			needsMoveNumber = false;
+		} else if (needsMoveNumber) {
 			moves.push(
 				<span
 					className="mr-1 text-muted-foreground"
@@ -59,6 +62,7 @@ function MainLine({
 					{mainChild.moveNumber}...
 				</span>,
 			);
+			needsMoveNumber = false;
 		}
 
 		moves.push(
@@ -70,6 +74,12 @@ function MainLine({
 			/>,
 		);
 
+		if (isWhiteMove) {
+			needsMoveNumber = false;
+		} else {
+			needsMoveNumber = true;
+		}
+
 		for (const alt of alternatives) {
 			moves.push(
 				<Variation
@@ -79,13 +89,16 @@ function MainLine({
 					onSelectNode={onSelectNode}
 				/>,
 			);
+			needsMoveNumber = true;
 		}
 
 		current = mainChild;
 	}
 
 	return (
-		<div className="flex flex-wrap items-start gap-x-1 gap-y-0.5">{moves}</div>
+		<div className="flex flex-wrap items-start gap-x-1 gap-y-1">
+			{moves}
+		</div>
 	);
 }
 
@@ -98,13 +111,14 @@ function Variation({
 	currentNodeId: string | null;
 	onSelectNode: (nodeId: string) => void;
 }) {
+	const isWhiteMove = node.sideToMove === "black";
+	const moveNum = isWhiteMove
+		? `${node.moveNumber}.`
+		: `${node.moveNumber}...`;
+
 	return (
-		<div className="my-1 w-full rounded border-muted-foreground/30 border-l-2 pl-2 text-muted-foreground">
-			<span className="mr-1 text-xs">
-				{node.sideToMove === "black"
-					? `${node.moveNumber}.`
-					: `${node.moveNumber}...`}
-			</span>
+		<div className="my-1 w-full rounded-md border-l-2 border-muted-foreground/30 bg-muted/30 py-1 pl-3 pr-1 text-muted-foreground">
+			<span className="mr-1 text-xs">{moveNum}</span>
 			<MoveSpan
 				isCurrent={node.id === currentNodeId}
 				move={node.move ?? ""}
@@ -132,7 +146,7 @@ function MoveSpan({
 }) {
 	return (
 		<button
-			className={`cursor-pointer rounded px-1 py-0.5 ${
+			className={`cursor-pointer rounded px-1.5 py-0.5 transition-colors ${
 				isCurrent
 					? "bg-primary font-bold text-primary-foreground"
 					: "hover:bg-accent"

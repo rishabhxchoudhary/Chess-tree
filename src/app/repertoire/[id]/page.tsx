@@ -57,6 +57,11 @@ export default function RepertoireEditorPage({
 
 	useEffect(() => {
 		const handleKeyDown = (e: KeyboardEvent) => {
+			if (
+				e.target instanceof HTMLInputElement ||
+				e.target instanceof HTMLTextAreaElement
+			)
+				return;
 			if (e.key === "ArrowLeft") {
 				e.preventDefault();
 				store.navigateBack();
@@ -162,7 +167,8 @@ export default function RepertoireEditorPage({
 			</header>
 
 			<ResizablePanelGroup className="flex-1" orientation="horizontal">
-				<ResizablePanel defaultSize={35} minSize={25}>
+				{/* Board */}
+				<ResizablePanel defaultSize={30} minSize={25}>
 					<div className="flex h-full items-center justify-center p-4">
 						<div className="w-full max-w-[560px]">
 							<ChessBoard
@@ -182,28 +188,59 @@ export default function RepertoireEditorPage({
 
 				<ResizableHandle withHandle />
 
-				<ResizablePanel defaultSize={35} minSize={20}>
-					<TreeView
-						currentNodeId={store.currentNodeId}
-						onSelectNode={(nodeId) => store.selectNode(nodeId)}
-						tree={store.tree}
-					/>
-				</ResizablePanel>
-
-				<ResizableHandle withHandle />
-
-				<ResizablePanel defaultSize={30} minSize={20}>
-					<ResizablePanelGroup orientation="vertical">
-						<ResizablePanel defaultSize={50}>
-							<MoveList
+				{/* Tree */}
+				<ResizablePanel defaultSize={40} minSize={25}>
+					<div className="flex h-full flex-col">
+						<div className="border-b px-3 py-1.5">
+							<span className="font-medium text-muted-foreground text-xs uppercase tracking-wide">
+								Opening Tree
+							</span>
+						</div>
+						<div className="flex-1">
+							<TreeView
 								currentNodeId={store.currentNodeId}
 								onSelectNode={(nodeId) => store.selectNode(nodeId)}
 								tree={store.tree}
 							/>
+						</div>
+					</div>
+				</ResizablePanel>
+
+				<ResizableHandle withHandle />
+
+				{/* Move list + Details */}
+				<ResizablePanel defaultSize={30} minSize={20}>
+					<ResizablePanelGroup orientation="vertical">
+						<ResizablePanel defaultSize={45}>
+							<div className="flex h-full flex-col">
+								<div className="border-b px-3 py-1.5">
+									<span className="font-medium text-muted-foreground text-xs uppercase tracking-wide">
+										Moves
+									</span>
+								</div>
+								<div className="flex-1 overflow-hidden">
+									<MoveList
+										currentNodeId={store.currentNodeId}
+										onSelectNode={(nodeId) =>
+											store.selectNode(nodeId)
+										}
+										tree={store.tree}
+									/>
+								</div>
+							</div>
 						</ResizablePanel>
 						<ResizableHandle withHandle />
-						<ResizablePanel defaultSize={50}>
-							<DetailsPanel repertoireId={id} />
+						<ResizablePanel defaultSize={55}>
+							<div className="flex h-full flex-col">
+								<div className="border-b px-3 py-1.5">
+									<span className="font-medium text-muted-foreground text-xs uppercase tracking-wide">
+										Details
+									</span>
+								</div>
+								<div className="flex-1 overflow-hidden">
+									<DetailsPanel repertoireId={id} />
+								</div>
+							</div>
 						</ResizablePanel>
 					</ResizablePanelGroup>
 				</ResizablePanel>
