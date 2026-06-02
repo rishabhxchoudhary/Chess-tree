@@ -2,7 +2,7 @@
 set -e
 
 echo "Running database migrations..."
-bunx drizzle-kit push --force
+bun run src/server/db/migrate.ts
 echo "Migrations complete."
 
 echo "Starting Chess Tree..."
