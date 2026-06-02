@@ -331,80 +331,83 @@ export default function RepertoireEditorPage({
 
 					{/* Stats bar + Notes (only when a move is selected) */}
 					<div className="space-y-2 border-t px-4 py-3">
-						{/* Stats bar — only for actual moves, not root */}
-						{!isAtRoot && (
-							<div className="flex items-center gap-3 text-sm">
+						{/* Stats bar */}
+						<div className="flex items-center gap-3 text-sm">
+							<Input
+								className="h-7 max-w-[200px] text-xs"
+								disabled={isAtRoot}
+								onBlur={saveDetails}
+								onChange={(e) => setLineName(e.target.value)}
+								placeholder="Opening name..."
+								value={lineName}
+							/>
+							<div className="flex items-center gap-1.5">
 								<Input
-									className="h-7 max-w-[200px] text-xs"
+									className="h-7 w-16 text-center text-xs"
+									disabled={isAtRoot}
 									onBlur={saveDetails}
-									onChange={(e) => setLineName(e.target.value)}
-									placeholder="Opening name..."
-									value={lineName}
+									onChange={(e) => setPlayed(e.target.value)}
+									placeholder="%"
+									type="number"
+									value={played}
 								/>
-								<div className="flex items-center gap-1.5">
-									<Input
-										className="h-7 w-16 text-center text-xs"
-										onBlur={saveDetails}
-										onChange={(e) => setPlayed(e.target.value)}
-										placeholder="%"
-										type="number"
-										value={played}
+								<span className="text-muted-foreground text-xs">
+									played
+								</span>
+							</div>
+							<div className="flex flex-1 items-center gap-2">
+								<div className="min-w-[80px] flex-1">
+									<WinRateBar
+										black={
+											blackWin
+												? Number.parseFloat(blackWin)
+												: null
+										}
+										draw={
+											draw ? Number.parseFloat(draw) : null
+										}
+										white={
+											whiteWin
+												? Number.parseFloat(whiteWin)
+												: null
+										}
 									/>
-									<span className="text-muted-foreground text-xs">
-										played
-									</span>
 								</div>
-								<div className="flex flex-1 items-center gap-2">
-									<div className="min-w-[80px] flex-1">
-										<WinRateBar
-											black={
-												blackWin
-													? Number.parseFloat(blackWin)
-													: null
-											}
-											draw={
-												draw ? Number.parseFloat(draw) : null
-											}
-											white={
-												whiteWin
-													? Number.parseFloat(whiteWin)
-													: null
-											}
-										/>
-									</div>
-									<div className="flex gap-1">
-										<Input
-											className="h-7 w-14 text-center text-xs"
-											onBlur={saveDetails}
-											onChange={(e) =>
-												setWhiteWin(e.target.value)
-											}
-											placeholder="W"
-											type="number"
-											value={whiteWin}
-										/>
-										<Input
-											className="h-7 w-14 text-center text-xs"
-											onBlur={saveDetails}
-											onChange={(e) => setDraw(e.target.value)}
-											placeholder="D"
-											type="number"
-											value={draw}
-										/>
-										<Input
-											className="h-7 w-14 text-center text-xs"
-											onBlur={saveDetails}
-											onChange={(e) =>
-												setBlackWin(e.target.value)
-											}
-											placeholder="B"
-											type="number"
-											value={blackWin}
-										/>
-									</div>
+								<div className="flex gap-1">
+									<Input
+										className="h-7 w-14 text-center text-xs"
+										disabled={isAtRoot}
+										onBlur={saveDetails}
+										onChange={(e) =>
+											setWhiteWin(e.target.value)
+										}
+										placeholder="W"
+										type="number"
+										value={whiteWin}
+									/>
+									<Input
+										className="h-7 w-14 text-center text-xs"
+										disabled={isAtRoot}
+										onBlur={saveDetails}
+										onChange={(e) => setDraw(e.target.value)}
+										placeholder="D"
+										type="number"
+										value={draw}
+									/>
+									<Input
+										className="h-7 w-14 text-center text-xs"
+										disabled={isAtRoot}
+										onBlur={saveDetails}
+										onChange={(e) =>
+											setBlackWin(e.target.value)
+										}
+										placeholder="B"
+										type="number"
+										value={blackWin}
+									/>
 								</div>
 							</div>
-						)}
+						</div>
 
 						{/* Notes — always visible */}
 						<Textarea
