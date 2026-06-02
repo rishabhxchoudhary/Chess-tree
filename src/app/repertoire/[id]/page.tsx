@@ -89,7 +89,7 @@ export default function RepertoireEditorPage({
 	}, [currentNode?.id]);
 
 	const saveDetails = useCallback(() => {
-		if (!currentNode || !currentNode.move) return;
+		if (!currentNode) return;
 		updateNode.mutate({
 			id: currentNode.id,
 			repertoireId: id,
@@ -210,7 +210,7 @@ export default function RepertoireEditorPage({
 			? "black"
 			: "white";
 
-	const isAtRoot = !currentNode?.move;
+	const isAtRoot = currentNode?.parentId === null;
 	const hasStats =
 		Number(whiteWin || 0) + Number(draw || 0) + Number(blackWin || 0) > 0 ||
 		Number(played || 0) > 0;
@@ -330,9 +330,9 @@ export default function RepertoireEditorPage({
 					</div>
 
 					{/* Stats bar + Notes (only when a move is selected) */}
-					{!isAtRoot && (
-						<div className="space-y-2 border-t px-4 py-3">
-							{/* Stats bar */}
+					<div className="space-y-2 border-t px-4 py-3">
+						{/* Stats bar — only for actual moves, not root */}
+						{!isAtRoot && (
 							<div className="flex items-center gap-3 text-sm">
 								<Input
 									className="h-7 max-w-[200px] text-xs"
@@ -404,17 +404,19 @@ export default function RepertoireEditorPage({
 									</div>
 								</div>
 							</div>
+						)}
 
-							{/* Notes */}
-							<Textarea
-								className="min-h-[60px] resize-y text-sm"
-								onBlur={saveDetails}
-								onChange={(e) => setNote(e.target.value)}
-								placeholder="Add notes about this position..."
-								value={note}
-							/>
+						{/* Notes — always visible */}
+						<Textarea
+							className="min-h-[60px] resize-y text-sm"
+							onBlur={saveDetails}
+							onChange={(e) => setNote(e.target.value)}
+							placeholder={isAtRoot ? "Add notes about this repertoire..." : "Add notes about this position..."}
+							value={note}
+						/>
 
-							{/* Delete */}
+						{/* Delete — only for actual moves */}
+						{!isAtRoot && (
 							<div className="flex justify-end">
 								<Button
 									size="sm"
@@ -445,8 +447,8 @@ export default function RepertoireEditorPage({
 									Delete move
 								</Button>
 							</div>
-						</div>
-					)}
+						)}
+					</div>
 				</div>
 
 				{/* Right column: Tabbed moves/tree */}
