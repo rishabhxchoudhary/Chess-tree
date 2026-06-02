@@ -100,6 +100,11 @@ export function ChessBoard({
 				return success;
 			}
 
+			if (selectedSquare === square) {
+				clearSelection();
+				return;
+			}
+
 			const chess = new Chess(position);
 			const moves = chess.moves({ square, verbose: true });
 
