@@ -7,6 +7,7 @@ import type { PieceDropHandlerArgs } from "react-chessboard";
 
 import { ChessBoard } from "@/components/chess-board";
 import { ImportPgnDialog } from "@/components/import-pgn-dialog";
+import { MoveList } from "@/components/move-list";
 import { TreeView } from "@/components/tree-view";
 import { trpc } from "@/components/providers";
 import { Button } from "@/components/ui/button";
@@ -161,9 +162,11 @@ export default function RepertoireEditorPage({
 				<ResizablePanel defaultSize={30} minSize={20}>
 					<ResizablePanelGroup orientation="vertical">
 						<ResizablePanel defaultSize={50}>
-							<div className="flex h-full items-center justify-center text-muted-foreground">
-								Move List (coming next)
-							</div>
+							<MoveList
+								currentNodeId={store.currentNodeId}
+								onSelectNode={(nodeId) => store.selectNode(nodeId)}
+								tree={store.tree}
+							/>
 						</ResizablePanel>
 						<ResizableHandle withHandle />
 						<ResizablePanel defaultSize={50}>
