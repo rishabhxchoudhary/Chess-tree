@@ -2,7 +2,7 @@
 
 import { Chess } from "chess.js";
 import dynamic from "next/dynamic";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type {
 	CustomPieces,
 	CustomSquareStyles,
@@ -58,6 +58,11 @@ export function ChessBoard({
 }: ChessBoardProps) {
 	const [selectedSquare, setSelectedSquare] = useState<Square | null>(null);
 	const [legalMoves, setLegalMoves] = useState<Square[]>([]);
+	const [markedSquares, setMarkedSquares] = useState<Set<string>>(new Set());
+
+	useEffect(() => {
+		setMarkedSquares(new Set());
+	}, [position]);
 
 	const customPieces = useMemo(() => buildCustomPieces(pieceSet), [pieceSet]);
 
@@ -84,8 +89,15 @@ export function ChessBoard({
 			};
 		}
 
+		for (const sq of markedSquares) {
+			styles[sq] = {
+				...styles[sq],
+				backgroundColor: "rgba(235, 97, 80, 0.8)",
+			};
+		}
+
 		return styles as CustomSquareStyles;
-	}, [lastMove, selectedSquare, legalMoves]);
+	}, [lastMove, selectedSquare, legalMoves, markedSquares]);
 
 	const clearSelection = useCallback(() => {
 		setSelectedSquare(null);
@@ -118,6 +130,21 @@ export function ChessBoard({
 		[selectedSquare, legalMoves, position, onMove, clearSelection],
 	);
 
+	const handleRightClick = useCallback(
+		(square: Square) => {
+			setMarkedSquares((prev) => {
+				const next = new Set(prev);
+				if (next.has(square)) {
+					next.delete(square);
+				} else {
+					next.add(square);
+				}
+				return next;
+			});
+		},
+		[],
+	);
+
 	const handlePieceDrop = useCallback(
 		(sourceSquare: Square, targetSquare: Square): boolean => {
 			clearSelection();
@@ -142,6 +169,7 @@ export function ChessBoard({
 			customSquareStyles={customSquareStyles}
 			customPieces={customPieces}
 			onSquareClick={handleSquareClick}
+			onSquareRightClick={handleRightClick}
 			onPieceDrop={handlePieceDrop}
 		/>
 	);
