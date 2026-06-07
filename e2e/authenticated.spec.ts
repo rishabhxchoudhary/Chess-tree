@@ -32,14 +32,12 @@ test.describe("Repertoire editor (authenticated)", () => {
 	test.beforeEach(async ({ page }, testInfo) => {
 		await page.goto("/");
 
-		// Create a uniquely-named repertoire for this test
 		const name = `E2E-${testInfo.title.slice(0, 10)}-${Date.now()}`;
 		await page.getByText("New Repertoire").click();
 		await page.getByLabel("Name").fill(name);
 		await page.getByRole("button", { name: "♔ White" }).click();
 		await page.getByRole("button", { name: "Create" }).click();
 
-		// Click into the newly created repertoire (use first match in case of duplicates)
 		await page.getByText(name).first().waitFor({ timeout: 5000 });
 		await page.getByText(name).first().click();
 		await page.waitForURL(/\/repertoire\//, { timeout: 5000 });
@@ -49,7 +47,6 @@ test.describe("Repertoire editor (authenticated)", () => {
 		const errors: string[] = [];
 		page.on("pageerror", (err) => errors.push(err.message));
 
-		// Page is already loaded from beforeEach
 		await page.waitForLoadState("networkidle");
 		await page.waitForTimeout(3000);
 
@@ -69,17 +66,18 @@ test.describe("Repertoire editor (authenticated)", () => {
 	});
 
 	test("chessboard renders", async ({ page }) => {
-		// v4 react-chessboard wraps in a div; look for any board-related element
-		const board = page.locator('[data-boardid="chess-tree-board"], [id*="chess-tree-board"]');
+		const board = page.locator(
+			'[data-boardid="chess-tree-board"], [id*="chess-tree-board"]',
+		);
 		await expect(board.first()).toBeVisible({ timeout: 10000 });
 	});
 
-	test("details panel shows Starting position for root node", async ({
+	test("details panel shows repertoire notes prompt at root", async ({
 		page,
 	}) => {
-		await expect(page.getByText("Starting position")).toBeVisible({
-			timeout: 5000,
-		});
+		await expect(
+			page.getByPlaceholder("Add notes about this repertoire..."),
+		).toBeVisible({ timeout: 5000 });
 	});
 
 	test("back button navigates to dashboard", async ({ page }) => {
@@ -94,6 +92,13 @@ test.describe("Repertoire editor (authenticated)", () => {
 			page.getByPlaceholder("1. e4 e5 2. Nf3 Nc6 ..."),
 		).toBeVisible();
 	});
+
+	// NOTE: Click/drag move-making is not E2E-tested — react-chessboard v4 uses
+	// react-dnd's HTML5 backend, which doesn't respond to Playwright's synthetic
+	// pointer/drag events in headless mode. The optimistic move logic (synchronous
+	// addMove, rapid consecutive moves with no stale-state errors,
+	// client-generated UUIDs, selection preservation) is fully covered by unit
+	// tests in src/hooks/use-repertoire-store.test.ts.
 });
 
 test.describe("Settings (authenticated)", () => {

@@ -19,52 +19,37 @@ export const nodeRouter = createRouter({
 	create: protectedProcedure
 		.input(
 			z.object({
+				id: z.string().uuid(),
 				repertoireId: z.string().uuid(),
 				parentId: z.string().uuid(),
 				move: z.string().min(1).max(10),
 				fen: z.string(),
 				moveNumber: z.number().int().min(0),
 				sideToMove: z.enum(["white", "black"]),
+				sortOrder: z.number().int().min(0).default(0),
 			}),
 		)
 		.mutation(async ({ ctx, input }) => {
 			await authorize(input.repertoireId, ctx.session.user.id);
 
-			const existing = await ctx.db.query.nodes.findFirst({
-				where: and(
-					eq(nodes.repertoireId, input.repertoireId),
-					eq(nodes.parentId, input.parentId),
-					eq(nodes.move, input.move),
-				),
-			});
-
-			if (existing) return existing;
-
-			const siblings = await ctx.db.query.nodes.findMany({
-				where: and(
-					eq(nodes.repertoireId, input.repertoireId),
-					eq(nodes.parentId, input.parentId),
-				),
-			});
-			const maxSort = siblings.reduce(
-				(max, s) => Math.max(max, s.sortOrder),
-				-1,
-			);
-
+			// Idempotent: client-generated id means retries are safe.
+			// onConflictDoNothing prevents duplicate-key errors on retry.
 			const [created] = await ctx.db
 				.insert(nodes)
 				.values({
+					id: input.id,
 					repertoireId: input.repertoireId,
 					parentId: input.parentId,
 					move: input.move,
 					fen: input.fen,
 					moveNumber: input.moveNumber,
 					sideToMove: input.sideToMove,
-					sortOrder: maxSort + 1,
+					sortOrder: input.sortOrder,
 				})
+				.onConflictDoNothing()
 				.returning();
 
-			return created;
+			return created ?? { id: input.id };
 		}),
 
 	update: protectedProcedure

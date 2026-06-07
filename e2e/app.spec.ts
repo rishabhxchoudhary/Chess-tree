@@ -7,13 +7,17 @@ test.describe("Landing page (unauthenticated)", () => {
 		await expect(page.getByText("Sign in with Google")).toBeVisible();
 	});
 
-	test("sign-in link points to auth endpoint", async ({ page }) => {
+	test("sign-in button triggers auth", async ({ page }) => {
 		await page.goto("/");
-		const link = page.getByText("Sign in with Google").locator("closest=a, ..");
-		// The button or its parent should link to the auth signin page
-		await expect(
-			page.locator('a[href="/api/auth/signin"]'),
-		).toBeVisible();
+		const button = page.getByRole("button", {
+			name: "Sign in with Google",
+		});
+		await expect(button).toBeVisible();
+		await button.click();
+		// signIn() navigates to the NextAuth signin/provider flow
+		await page.waitForURL(/\/api\/auth\/(signin|signout)|accounts\.google/, {
+			timeout: 10000,
+		});
 	});
 });
 
@@ -64,10 +68,12 @@ test.describe("Settings page (unauthenticated)", () => {
 		await expect(page.getByText("Show legal move indicators")).toBeVisible();
 	});
 
-	test("back button navigates to home", async ({ page }) => {
+	test("back button returns to previous page", async ({ page }) => {
+		// Settings back uses router.back(); navigate from home first so there's history
+		await page.goto("/");
 		await page.goto("/settings");
 		await page.getByText("← Back").click();
-		await expect(page).toHaveURL("/");
+		await expect(page).toHaveURL("/", { timeout: 10000 });
 	});
 });
 
@@ -129,7 +135,7 @@ test.describe("Static assets", () => {
 	});
 
 	test("Sound files are accessible", async ({ request }) => {
-		for (const sound of ["move", "capture", "check"]) {
+		for (const sound of ["move", "capture", "castle", "game-end"]) {
 			const response = await request.get(`/sounds/${sound}.mp3`);
 			expect(response.status()).toBe(200);
 		}

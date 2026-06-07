@@ -3,7 +3,7 @@
 import { Chess } from "chess.js";
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { use, useCallback, useEffect, useRef, useState } from "react";
+import { use, useCallback, useEffect, useState } from "react";
 import { signIn, useSession } from "next-auth/react";
 import type { Square } from "react-chessboard/dist/chessboard/types";
 import { toast } from "sonner";
@@ -45,7 +45,15 @@ export default function RepertoireEditorPage({
 	);
 	const { data: nodesData } = trpc.node.getTree.useQuery(
 		{ repertoireId: id },
-		{ enabled: !!session },
+		{
+			enabled: !!session,
+			// Store is the source of truth after initial load. Disable
+			// background refetches so an in-flight save isn't clobbered by
+			// stale server data.
+			refetchOnWindowFocus: false,
+			refetchOnReconnect: false,
+			staleTime: Number.POSITIVE_INFINITY,
+		},
 	);
 	const createNode = trpc.node.create.useMutation();
 	const updateNode = trpc.node.update.useMutation();
@@ -53,7 +61,6 @@ export default function RepertoireEditorPage({
 
 	const [flipped, setFlipped] = useState(false);
 	const [rightTab, setRightTab] = useState<RightTab>("moves");
-	const [optimisticFen, setOptimisticFen] = useState<string | null>(null);
 
 	// Inline editing state
 	const [note, setNote] = useState("");
@@ -64,23 +71,17 @@ export default function RepertoireEditorPage({
 	const [played, setPlayed] = useState("");
 	const [dirty, setDirty] = useState(false);
 
-	// FIX 1: Only load data from server on initial mount, not on every re-render
-	const initialLoadDone = useRef(false);
+	// Load server data into the store. setRepertoireData preserves the current
+	// selection if the node still exists, so refetches/imports don't reset the board.
 	useEffect(() => {
-		if (nodesData && !initialLoadDone.current) {
+		if (nodesData) {
 			store.setRepertoireData(id, nodesData);
-			initialLoadDone.current = true;
 		}
 	}, [nodesData, id, store.setRepertoireData]);
 
 	const currentNode = store.getCurrentNode();
 
-	// Clear optimistic FEN when store updates
-	useEffect(() => {
-		setOptimisticFen(null);
-	}, [currentNode?.id]);
-
-	// FIX 4: Sync form state from the STORE (which has latest data), not just on id change
+	// Sync form state from the store when the selected node changes
 	useEffect(() => {
 		if (currentNode) {
 			setNote(currentNode.note ?? "");
@@ -174,9 +175,12 @@ export default function RepertoireEditorPage({
 
 	const handleMove = useCallback(
 		(sourceSquare: Square, targetSquare: Square): boolean => {
-			if (!currentNode) return false;
+			// Read the latest current node from the store directly so rapid
+			// consecutive moves never validate against a stale closure value.
+			const node = store.getCurrentNode();
+			if (!node) return false;
 
-			const chess = new Chess(currentNode.fen);
+			const chess = new Chess(node.fen);
 			let move;
 			try {
 				move = chess.move({
@@ -185,8 +189,7 @@ export default function RepertoireEditorPage({
 					promotion: "q",
 				});
 			} catch {
-				const turn =
-					currentNode.sideToMove === "white" ? "White" : "Black";
+				const turn = node.sideToMove === "white" ? "White" : "Black";
 				toast.error(`${turn} to move`, {
 					description: "That move is not legal in this position.",
 					duration: 2000,
@@ -201,38 +204,44 @@ export default function RepertoireEditorPage({
 			else if (move.san === "O-O" || move.san === "O-O-O") play("castle");
 			else play("move");
 
-			setOptimisticFen(chess.fen());
+			// Apply to client state SYNCHRONOUSLY — board/tree/movelist update
+			// instantly and the next move validates against this new node.
+			const { node: added, isNew } = store.addMove({
+				parentId: node.id,
+				move: move.san,
+				fen: chess.fen(),
+				moveNumber: Math.ceil(chess.moveNumber() / 2),
+				sideToMove: chess.turn() === "w" ? "white" : "black",
+			});
 
-			const existing = currentNode.children.find(
-				(c) => c.move === move.san,
-			);
-			if (existing) {
-				store.selectNode(existing.id);
-				return true;
-			}
-
-			createNode.mutate(
-				{
-					repertoireId: id,
-					parentId: currentNode.id,
-					move: move.san,
-					fen: chess.fen(),
-					moveNumber: Math.ceil(chess.moveNumber() / 2),
-					sideToMove: chess.turn() === "w" ? "white" : "black",
-				},
-				{
-					onSuccess: (newNode) => {
-						if (newNode) {
-							store.addNode(newNode);
-							store.selectNode(newNode.id);
-						}
+			// Persist in the background (fire-and-forget). UI never waits.
+			if (isNew) {
+				createNode.mutate(
+					{
+						id: added.id,
+						repertoireId: id,
+						parentId: node.id,
+						move: added.move!,
+						fen: added.fen,
+						moveNumber: added.moveNumber,
+						sideToMove: added.sideToMove,
+						sortOrder: added.sortOrder,
 					},
-				},
-			);
+					{
+						onError: () => {
+							toast.error("Move not saved", {
+								description:
+									"Couldn't reach the server. Check your connection.",
+								duration: 3000,
+							});
+						},
+					},
+				);
+			}
 
 			return true;
 		},
-		[currentNode, id, createNode, play, store],
+		[id, createNode, play, store],
 	);
 
 	const boardOrientation = flipped
@@ -300,9 +309,7 @@ export default function RepertoireEditorPage({
 								onMove={handleMove}
 								orientation={boardOrientation}
 								pieceSet={preferences.pieceSet}
-								position={
-									optimisticFen ?? currentNode?.fen ?? "start"
-								}
+								position={currentNode?.fen ?? "start"}
 							/>
 						</div>
 					</div>
